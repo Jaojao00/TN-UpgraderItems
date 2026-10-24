@@ -22,6 +22,7 @@ import vn.tainguyen.tnupgrader.gui.EquipmentUpgraderGui;
 import vn.tainguyen.tnupgrader.gui.MainUpgraderGui;
 import vn.tainguyen.tnupgrader.gui.RewardBrowserGui;
 import vn.tainguyen.tnupgrader.gui.UpgraderSession;
+import vn.tainguyen.tnupgrader.model.NativeEnchantment;
 import vn.tainguyen.tnupgrader.model.PlayerProfile;
 import vn.tainguyen.tnupgrader.model.RewardItem;
 import vn.tainguyen.tnupgrader.model.UpgradeAttribute;
@@ -405,26 +406,45 @@ public class GuiListener implements Listener {
             }
         }
 
-        // Chọn dòng Thuộc Tính hoặc Phù Phép ở Hàng 5 (Slots 36..44)
+        // Chọn dòng Thuộc Tính, Phù Phép hoặc Cổ Ngữ Độc Quyền ở Hàng 5 (Slots 36..44)
         if (slot >= 36 && slot <= 44) {
             int idx = slot - 36;
-            if (!session.isEnchantUpgradeTab()) {
-                UpgradeAttribute[] attrs = UpgradeAttribute.values();
-                if (idx < attrs.length) {
-                    session.setSelectedAttribute(attrs[idx]);
-                    session.playSound(player, Sound.UI_BUTTON_CLICK, 0.8f, 1.2f);
-                    plugin.getEquipmentUpgraderGui().render(player, session, session.getActiveInventory());
-                }
-            } else {
-                ItemStack clicked = event.getCurrentItem();
-                if (clicked != null && clicked.hasItemMeta()) {
-                    String keyStr = clicked.getItemMeta().getPersistentDataContainer()
-                            .get(plugin.getEquipmentUpgraderGui().getEnchantKeyTag(), PersistentDataType.STRING);
-                    Enchantment ench = plugin.getEquipmentUpgraderGui().resolveEnchantFromKey(keyStr);
-                    if (ench != null) {
-                        session.setSelectedEnchantment(ench);
+            switch (session.getUpgradeTab()) {
+                case ATTRIBUTES -> {
+                    UpgradeAttribute[] attrs = UpgradeAttribute.values();
+                    if (idx < attrs.length) {
+                        session.setSelectedAttribute(attrs[idx]);
                         session.playSound(player, Sound.UI_BUTTON_CLICK, 0.8f, 1.2f);
                         plugin.getEquipmentUpgraderGui().render(player, session, session.getActiveInventory());
+                    }
+                }
+                case VANILLA_ENCHANTS -> {
+                    ItemStack clicked = event.getCurrentItem();
+                    if (clicked != null && clicked.hasItemMeta()) {
+                        String keyStr = clicked.getItemMeta().getPersistentDataContainer()
+                                .get(plugin.getEquipmentUpgraderGui().getEnchantKeyTag(), PersistentDataType.STRING);
+                        Enchantment ench = plugin.getEquipmentUpgraderGui().resolveEnchantFromKey(keyStr);
+                        if (ench != null) {
+                            session.setSelectedEnchantment(ench);
+                            session.playSound(player, Sound.UI_BUTTON_CLICK, 0.8f, 1.2f);
+                            plugin.getEquipmentUpgraderGui().render(player, session, session.getActiveInventory());
+                        }
+                    }
+                }
+                case NATIVE_RUNES -> {
+                    ItemStack clicked = event.getCurrentItem();
+                    if (clicked != null && clicked.hasItemMeta()) {
+                        String runeName = clicked.getItemMeta().getPersistentDataContainer()
+                                .get(plugin.getEquipmentUpgraderGui().getRuneKeyTag(), PersistentDataType.STRING);
+                        if (runeName != null) {
+                            try {
+                                NativeEnchantment rune = NativeEnchantment.valueOf(runeName);
+                                session.setSelectedNativeEnchant(rune);
+                                session.playSound(player, Sound.UI_BUTTON_CLICK, 0.8f, 1.2f);
+                                plugin.getEquipmentUpgraderGui().render(player, session, session.getActiveInventory());
+                            } catch (IllegalArgumentException ignored) {
+                            }
+                        }
                     }
                 }
             }
@@ -438,26 +458,43 @@ public class GuiListener implements Listener {
             }
             case 8 -> player.closeInventory();
             case EquipmentUpgraderGui.ATTR_TAB_SLOT -> {
-                session.setEnchantUpgradeTab(false);
+                session.setUpgradeTab(UpgraderSession.UpgradeTab.ATTRIBUTES);
+                session.setEnchantPage(0);
                 session.playSound(player, Sound.UI_BUTTON_CLICK, 0.8f, 1.3f);
                 plugin.getEquipmentUpgraderGui().render(player, session, session.getActiveInventory());
             }
             case EquipmentUpgraderGui.ENCHANT_TAB_SLOT -> {
-                session.setEnchantUpgradeTab(true);
+                session.setUpgradeTab(UpgraderSession.UpgradeTab.VANILLA_ENCHANTS);
+                session.setEnchantPage(0);
+                session.playSound(player, Sound.UI_BUTTON_CLICK, 0.8f, 1.3f);
+                plugin.getEquipmentUpgraderGui().render(player, session, session.getActiveInventory());
+            }
+            case EquipmentUpgraderGui.RUNE_TAB_SLOT -> {
+                session.setUpgradeTab(UpgraderSession.UpgradeTab.NATIVE_RUNES);
                 session.setEnchantPage(0);
                 session.playSound(player, Sound.UI_BUTTON_CLICK, 0.8f, 1.3f);
                 plugin.getEquipmentUpgraderGui().render(player, session, session.getActiveInventory());
             }
             case EquipmentUpgraderGui.ENCHANT_PREV_PAGE_SLOT -> {
-                if (session.isEnchantUpgradeTab() && session.getEnchantPage() > 0) {
+                if (session.getUpgradeTab() != UpgraderSession.UpgradeTab.ATTRIBUTES && session.getEnchantPage() > 0) {
                     session.setEnchantPage(session.getEnchantPage() - 1);
                     session.playSound(player, Sound.ITEM_BOOK_PAGE_TURN, 1.0f, 1.0f);
                     plugin.getEquipmentUpgraderGui().render(player, session, session.getActiveInventory());
                 }
             }
             case EquipmentUpgraderGui.ENCHANT_NEXT_PAGE_SLOT -> {
-                if (session.isEnchantUpgradeTab() && session.getEquipmentItem() != null) {
+                if (session.getUpgradeTab() == UpgraderSession.UpgradeTab.VANILLA_ENCHANTS && session.getEquipmentItem() != null) {
                     int total = plugin.getExcellentEnchantsHook().getApplicableEnchantments(session.getEquipmentItem()).size();
+                    int maxPages = Math.max(1, (int) Math.ceil(total / 9.0));
+                    if (session.getEnchantPage() + 1 < maxPages) {
+                        session.setEnchantPage(session.getEnchantPage() + 1);
+                        session.playSound(player, Sound.ITEM_BOOK_PAGE_TURN, 1.0f, 1.2f);
+                        plugin.getEquipmentUpgraderGui().render(player, session, session.getActiveInventory());
+                    }
+                } else if (session.getUpgradeTab() == UpgraderSession.UpgradeTab.NATIVE_RUNES) {
+                    int total = (session.getEquipmentItem() == null || session.getEquipmentItem().getType().isAir())
+                            ? NativeEnchantment.values().length
+                            : NativeEnchantment.getApplicable(session.getEquipmentItem()).size();
                     int maxPages = Math.max(1, (int) Math.ceil(total / 9.0));
                     if (session.getEnchantPage() + 1 < maxPages) {
                         session.setEnchantPage(session.getEnchantPage() + 1);
@@ -471,7 +508,7 @@ public class GuiListener implements Listener {
                     plugin.getEquipmentManager().resetCustomAttributes(session.getEquipmentItem());
                     session.playSound(player, Sound.BLOCK_GRINDSTONE_USE, 1.0f, 1.0f);
                     player.sendMessage(TextUtil.color(plugin.getConfigManager().getPrefix()
-                            + "&eĐã tẩy luyện toàn bộ dòng thuộc tính bổ sung trên trang bị!"));
+                            + "&eĐã tẩy luyện toàn bộ dòng Thuộc tính và Cổ Ngữ trên trang bị!"));
                     plugin.getEquipmentUpgraderGui().render(player, session, session.getActiveInventory());
                 }
             }

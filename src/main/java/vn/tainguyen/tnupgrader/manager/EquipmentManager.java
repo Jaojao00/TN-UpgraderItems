@@ -15,6 +15,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import vn.tainguyen.tnupgrader.TNUpgraderPlugin;
+import vn.tainguyen.tnupgrader.hook.ExcellentEnchantsHook;
+import vn.tainguyen.tnupgrader.model.NativeEnchantment;
 import vn.tainguyen.tnupgrader.model.UpgradeAttribute;
 import vn.tainguyen.tnupgrader.util.TextUtil;
 
@@ -55,6 +57,10 @@ public class EquipmentManager {
         return new NamespacedKey(plugin, "attr_" + attr.name().toLowerCase(Locale.ROOT));
     }
 
+    private NamespacedKey getRuneKey(NativeEnchantment rune) {
+        return new NamespacedKey(plugin, "rune_" + rune.name().toLowerCase(Locale.ROOT));
+    }
+
     public int getAttributeLevel(ItemStack item, UpgradeAttribute attr) {
         if (item == null || !item.hasItemMeta()) {
             return 0;
@@ -78,9 +84,67 @@ public class EquipmentManager {
         return map;
     }
 
+    // ==========================================================================
+    // HỆ THỐNG CỔ NGỮ & PHÙ PHÉP NỘI TẠI ĐỘC QUYỀN (NATIVE ENCHANTMENTS)
+    // ==========================================================================
+    public int getNativeEnchantLevel(ItemStack item, NativeEnchantment rune) {
+        if (item == null || !item.hasItemMeta() || rune == null) {
+            return 0;
+        }
+        PersistentDataContainer pdc = item.getItemMeta().getPersistentDataContainer();
+        Integer lvl = pdc.get(getRuneKey(rune), PersistentDataType.INTEGER);
+        return lvl != null ? Math.max(0, lvl) : 0;
+    }
+
+    public Map<NativeEnchantment, Integer> getAllNativeEnchants(ItemStack item) {
+        Map<NativeEnchantment, Integer> map = new EnumMap<>(NativeEnchantment.class);
+        if (item == null || !item.hasItemMeta()) {
+            return map;
+        }
+        for (NativeEnchantment rune : NativeEnchantment.values()) {
+            int lvl = getNativeEnchantLevel(item, rune);
+            if (lvl > 0) {
+                map.put(rune, lvl);
+            }
+        }
+        return map;
+    }
+
+    public int getMaxNativeEnchants() {
+        return plugin.getConfig().getInt("equipment-upgrader.max-native-enchants", 3);
+    }
+
+    public boolean canUpgradeNativeEnchant(ItemStack item, NativeEnchantment rune) {
+        if (item == null || rune == null || !rune.canApplyTo(item)) {
+            return false;
+        }
+        Map<NativeEnchantment, Integer> current = getAllNativeEnchants(item);
+        int curLvl = current.getOrDefault(rune, 0);
+        if (curLvl >= rune.getMaxLevel()) {
+            return false;
+        }
+        if (curLvl == 0 && current.size() >= getMaxNativeEnchants()) {
+            return false;
+        }
+        return true;
+    }
+
+    public void upgradeNativeEnchant(ItemStack item, NativeEnchantment rune) {
+        if (item == null || item.getType().isAir() || rune == null) return;
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) return;
+        int newLvl = getNativeEnchantLevel(item, rune) + 1;
+        meta.getPersistentDataContainer().set(getRuneKey(rune), PersistentDataType.INTEGER, newLvl);
+        item.setItemMeta(meta);
+        applyBukkitAttributesAndLore(item);
+    }
+
     public int getTotalUpgradeStars(ItemStack item) {
         int total = 0;
         for (int lvl : getAllAttributes(item).values()) {
+            total += lvl;
+        }
+        for (int lvl : getAllNativeEnchants(item).values()) {
             total += lvl;
         }
         return total;
@@ -165,9 +229,6 @@ public class EquipmentManager {
         return enchant.getMaxLevel() + Math.max(0, bonus);
     }
 
-    /**
-     * Nâng cấp dòng thuộc tính lên +1 cấp và cập nhật AttributeModifier 1.21 + Lore
-     */
     public void upgradeAttribute(ItemStack item, UpgradeAttribute attr) {
         if (item == null || item.getType().isAir()) return;
         ItemMeta meta = item.getItemMeta();
@@ -180,9 +241,6 @@ public class EquipmentManager {
         applyBukkitAttributesAndLore(item);
     }
 
-    /**
-     * Nâng cấp Phù phép (Vanilla hoặc ExcellentEnchants) lên +1 cấp
-     */
     public void upgradeEnchantment(ItemStack item, Enchantment enchant) {
         if (item == null || item.getType().isAir() || enchant == null) return;
         ItemMeta meta = item.getItemMeta();
@@ -193,9 +251,6 @@ public class EquipmentManager {
         applyBukkitAttributesAndLore(item);
     }
 
-    /**
-     * Xóa toàn bộ dòng thuộc tính bổ sung (Tẩy luyện lại từ đầu)
-     */
     public void resetCustomAttributes(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return;
         ItemMeta meta = item.getItemMeta();
@@ -212,6 +267,9 @@ public class EquipmentManager {
                     }
                 }
             }
+        }
+        for (NativeEnchantment rune : NativeEnchantment.values()) {
+            meta.getPersistentDataContainer().remove(getRuneKey(rune));
         }
         Attribute breakSpeedAttr = UpgradeAttribute.resolveBlockBreakSpeedAttribute();
         if (breakSpeedAttr != null && meta.getAttributeModifiers(breakSpeedAttr) != null) {
@@ -233,6 +291,7 @@ public class EquipmentManager {
         if (meta == null) return;
 
         Map<UpgradeAttribute, Integer> attrs = getAllAttributes(item);
+        Map<NativeEnchantment, Integer> runes = getAllNativeEnchants(item);
         EquipmentSlotGroup slotGroup = resolveEquipmentSlotGroup(item.getType());
 
         // Bảo toàn chỉ số gốc (Vanilla Damage/Armor) trước khi thêm AttributeModifier tùy chỉnh
@@ -302,7 +361,7 @@ public class EquipmentManager {
             }
         }
 
-        // Cập nhật khối Lore Cường Hóa đẹp mắt mà vẫn giữ nguyên Lore gốc (MythicMobs...)
+        // Cập nhật khối Lore Cường Hóa & Cổ Ngữ Độc Quyền TN-Upgrader
         List<Component> currentLore = meta.lore();
         List<Component> cleanLore = new ArrayList<>();
         if (currentLore != null) {
@@ -322,16 +381,27 @@ public class EquipmentManager {
         if (totalStars > 0) {
             cleanLore.add(Component.empty());
             cleanLore.add(TextUtil.color("&6&l" + LORE_HEADER_PLAIN + " [+" + totalStars + " ⭐] ✦ ==="));
-            cleanLore.add(TextUtil.color("&7Thuộc tính bổ sung: &e" + attrs.size() + "&7/&6" + getMaxCustomAttributes() + " dòng"));
-            for (Map.Entry<UpgradeAttribute, Integer> entry : attrs.entrySet()) {
-                UpgradeAttribute attr = entry.getKey();
-                int lvl = entry.getValue();
-                double totalVal = getAttributePerLevel(attr) * lvl;
-                String extraInfo = (attr == UpgradeAttribute.ATTACK_SPEED)
-                        ? " &7(&a+" + (lvl * 25) + "% Đào nhanh&7)"
-                        : "";
-                cleanLore.add(TextUtil.color(" &8▸ " + getAttributeDisplayName(attr)
-                        + " &f(Cấp " + lvl + "): &a+" + TextUtil.formatValue(totalVal) + getAttributeUnit(attr) + extraInfo));
+            if (!attrs.isEmpty()) {
+                cleanLore.add(TextUtil.color("&7Thuộc tính cường hóa (&e" + attrs.size() + "&7/&6" + getMaxCustomAttributes() + "&7):"));
+                for (Map.Entry<UpgradeAttribute, Integer> entry : attrs.entrySet()) {
+                    UpgradeAttribute attr = entry.getKey();
+                    int lvl = entry.getValue();
+                    double totalVal = getAttributePerLevel(attr) * lvl;
+                    String extraInfo = (attr == UpgradeAttribute.ATTACK_SPEED)
+                            ? " &7(&a+" + (lvl * 25) + "% Đào nhanh&7)"
+                            : "";
+                    cleanLore.add(TextUtil.color(" &8▸ " + getAttributeDisplayName(attr)
+                            + " &f(Cấp " + lvl + "): &a+" + TextUtil.formatValue(totalVal) + getAttributeUnit(attr) + extraInfo));
+                }
+            }
+            if (!runes.isEmpty()) {
+                cleanLore.add(TextUtil.color("&7Cổ ngữ độc quyền TN-Upgrader (&d" + runes.size() + "&7/&5" + getMaxNativeEnchants() + "&7):"));
+                for (Map.Entry<NativeEnchantment, Integer> entry : runes.entrySet()) {
+                    NativeEnchantment rune = entry.getKey();
+                    int lvl = entry.getValue();
+                    cleanLore.add(TextUtil.color(" &d✦ " + rune.getDisplayName() + " &e" + ExcellentEnchantsHook.toRoman(lvl)));
+                    cleanLore.add(TextUtil.color("   &8└ &7" + rune.formatEffect(lvl)));
+                }
             }
         }
 

@@ -9,7 +9,7 @@ public enum ItemCategory {
     MINERALS("Khoáng sản & Quý hiếm", Material.DIAMOND),
     FOOD("Thức ăn", Material.GOLDEN_APPLE),
     BLOCKS("Khối & Tự nhiên", Material.GRASS_BLOCK),
-    SPECIAL("MythicMobs & Phù phép", Material.ENCHANTED_BOOK);
+    SPECIAL("Cổ Ngữ & Phù Phép Đặc Biệt", Material.ENCHANTED_BOOK);
 
     private final String displayName;
     private final Material icon;

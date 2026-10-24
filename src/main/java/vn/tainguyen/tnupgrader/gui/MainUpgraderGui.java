@@ -134,16 +134,17 @@ public class MainUpgraderGui {
 
         // Slot 7: Chuyển sang Chế Độ Cường Hóa Trang Bị End-Game
         inv.setItem(7, new ItemBuilder(Material.NETHERITE_SWORD)
-                .name("&6&l⚔ CƯỜNG HÓA TRANG BỊ &8[End-Game]")
+                .name("&6&l⚔ CƯỜNG HÓA TRANG BỊ & CỔ NGỮ &8[Độc Quyền]")
                 .lore(
-                        "&7Chuyển sang bàn &eCường Hóa Thuộc Tính",
-                        "&7& &dPhù Phép (ExcellentEnchants / MythicMobs)&7!",
+                        "&7Chuyển sang bàn &eCường Hóa Công Cụ, Vũ Khí & Giáp",
+                        "&7với Hệ Sinh Thái Độc Quyền của &6TN-UpgraderItems&7:",
                         "",
-                        "&f• Ép tối đa &6" + plugin.getEquipmentManager().getMaxCustomAttributes() + " dòng thuộc tính &fbổ sung",
-                        "&f• Hút máu, Chí mạng, Sát thương chuẩn...",
-                        "&f• Cường hóa thất bại &aGIỮ NGUYÊN &ftrang bị!",
+                        "&f• &6Thuộc Tính Cường Hóa: &7Đào nhanh, Máu, Sát thương...",
+                        "&f• &dPhù Phép Vượt Cấp: &7Hiệu Suất, Chậm Hỏng, Gia Tài...",
+                        "&f• &b12 Cổ Ngữ Độc Quyền: &7Đào Mạch Quặng, Đào 3x3,",
+                        "&7  Nung Quặng Tự Động, Từ Trường Hút Đồ, Sấm Sét...",
                         "",
-                        "&a▸ Chạm để chuyển sang Cường Hóa Trang Bị!"
+                        "&a▸ Chạm để chuyển sang Bàn Cường Hóa Trang Bị!"
                 )
                 .glow(true)
                 .hideFlags()
@@ -377,10 +378,12 @@ public class MainUpgraderGui {
 
         // Slot 52, 53: Nút chuyển nhanh sang Cường Hóa Trang Bị End-Game
         ItemStack equipModeBtn = new ItemBuilder(Material.ANVIL)
-                .name("&6&l⚒ BÀN CƯỜNG HÓA TRANG BỊ")
+                .name("&6&l⚒ BÀN CƯỜNG HÓA & CỔ NGỮ ĐỘC QUYỀN")
                 .lore(
-                        "&7Nâng cấp Vũ khí, Giáp trụ, Công cụ",
-                        "&7với &eThuộc Tính Bổ Sung &7& &dExcellentEnchants&7!",
+                        "&7Nâng cấp Công cụ, Vũ khí, Giáp trụ với:",
+                        "&e• Thuộc tính Đào Nhanh, Sát Thương, Hút Máu",
+                        "&d• Phù phép Hiệu Suất, Chậm Hỏng, Gia Tài",
+                        "&b• 12 Cổ Ngữ Độc Quyền (Đào Mạch Quặng, 3x3...)",
                         "",
                         "&6▸ Chạm để mở Bàn Cường Hóa Trang Bị!"
                 )

@@ -1,70 +1,69 @@
 # ⚒ TN-UpgraderItems (Paper 1.21+)
 **Tác giả (Author):** Tài Nguyễn  
 **Phiên bản hỗ trợ:** Paper / Purpur `1.21` ▸ `1.21.11+` (Java 21)  
-**Tích hợp hỗ trợ:** `MythicMobs`, `ExcellentEnchants`, `Floodgate / Geyser (PE Bedrock)`
+**Đặc điểm cốt lõi:** **Hoạt động độc lập 100%** với Hệ Sinh Thái Cổ Ngữ, Thuộc Tính, Đá Cường Hóa & Bảo Vật Thần Thoại của riêng `TN-UpgraderItems` *(và tự động mở rộng nếu máy chủ có cài thêm `MythicMobs`, `ExcellentEnchants`, `Floodgate/Geyser`)*.
 
 ---
 
-## 🌟 Điểm Độc Đáo & Đột Phá Của Plugin
-**TN-UpgraderItems** kết hợp hoàn hảo **2 chế độ nâng cấp gây nghiện** trong cùng một hệ thống giao diện trực quan, hỗ trợ thao tác **1-Chạm (One-Tap)** cực mượt cho cả người chơi **PE (Điện thoại)** lẫn **PC**:
+## 🌟 Hệ Sinh Thái Độc Quyền Của Riêng `TN-UpgraderItems` (Không Phụ Thuộc Plugin Ngoài)
 
-### 1. 🎲 Chế Độ 1: Đấu Giá Nâng Cấp Vật Phẩm (Chuẩn 100% Bộ Ảnh Mẫu)
-- **Lưới Đồ Cược 3x3 (`ĐỒ CƯỢC 0/64`)**: Người chơi chỉ cần **chạm trực tiếp** vào vật phẩm trong túi đồ để đưa lên lưới 3x3 mà không cần kéo thả. Mỗi vật phẩm có điểm giá trị **`V`** riêng (VD: Thỏi sắt = `27 V` $\rightarrow$ 36 Thỏi sắt = `972 V`, Kim cương = `250 V`, Thỏi Netherite = `1656 V`, Cánh Elytra = `16000 V`, Táo vàng phù phép = `6000 V`...).
-- **Vòng Quay Tỷ Lệ May Rủi Kịch Tính (`0.00%` ▸ `100.00%`)**:
-  - Công thức chuẩn:
-    $$\text{Tỷ lệ thành công (\%)} = \min\left(100\%, \frac{\text{Tổng Giá Trị Cược } (V)}{\text{Đơn Giá Đích } (V) \times \text{Số Lượng Đích}} \times 100\right)$$
-  - Khi bấm **`NÂNG CẤP`**, vòng tròn trung tâm chuyển sang trạng thái **`ĐANG QUAY`**, kim chỉ thị chạy vòng quanh vòng tròn 8 ô kèm âm thanh tích-tắc chậm dần đầy hồi hộp rồi dừng lại ở **`THÀNH CÔNG`** (nổ pháo hoa, nhận vật phẩm, thông báo toàn server) hoặc **`THẤT BẠI`** (nút đổi thành **`TIẾP TỤC`**).
-- **Thanh Hệ Số Nhân Nhanh (`x1` ▸ `x10`) & `Số lượng đích`**: Bấm `x2`, `x5`, `x10` để hệ thống tự động chọn ngay phần thưởng có giá trị gấp tương ứng số `V` đang cược!
-- **Kho `TÌM PHẦN THƯỞNG` Thông Minh**:
-  - Tìm kiếm theo tên tiếng Việt không dấu/có dấu hoặc mã vật phẩm (`Tìm: tên / mã`, VD: gõ `kim` ra *Ủng kim cương, Kiếm kim cương, Quặng kim cương...*).
-  - Lọc theo danh mục (`Tất cả`, `Vũ khí & Giáp`, `Công cụ`, `Khoáng sản`, `Thức ăn`, `Khối & Tự nhiên`, `MythicMobs & Phù phép`).
-  - Sắp xếp theo `Giá tăng`, `Giá giảm`, `Tỉ lệ cao ▸ thấp`, `Tên A ▸ Z`.
-  - Tự động tính số lượng đề xuất (`xN`) khi số `V` cược lớn hơn đơn giá vật phẩm.
-- **Tiện Ích Cá Nhân Hóa**:
-  - **`Màu Giao diện`**: Đổi chủ đề màu kính (Vàng Hoàng Kim, Xanh Kim Cương, Lục Bảo, Đỏ Hỏa Ngục, Tím Huyền Bí, Đen Tối Giản).
-  - **`Yêu thích ★`**: Lưu các món đồ mục tiêu hay nâng cấp.
-  - **`Cài đặt`**: Bật/tắt hiệu ứng quay vòng tròn (Quay hồi hộp vs Quay siêu tốc), âm thanh, thông báo server.
-  - **`Thống kê`**: Xem tổng lượt đập, tỉ lệ thắng thực tế, lợi nhuận ròng `V`, chuỗi thắng kỷ lục và **Top 5 Đại Gia Nâng Cấp** toàn server!
+Ngay cả khi máy chủ của bạn **không cài bất kỳ plugin phụ trợ nào**, `TN-UpgraderItems` vẫn tự tạo ra một hệ sinh thái nâng cấp End-Game hoàn chỉnh, sâu sắc và gây nghiện:
 
----
+### 1. 🔮 12 Cổ Ngữ Độc Quyền TN-Upgrader (`NativeEnchantment` - Tab 3 Bàn Cường Hóa)
+Các kỹ năng nội tại được xử lý trực tiếp bởi lõi của plugin, chia làm 3 nhánh chuyên biệt:
 
-### 2. ⚔ Chế Độ 2: Bàn Cường Hóa Trang Bị End-Game (MythicMobs & ExcellentEnchants)
-- **Tạo End-Game Content Đích Thực**: Khi người chơi đã có đồ **Netherite full bùa** hoặc trang bị **MythicMobs**, họ vẫn có động lực cày cuốc tài nguyên để cường hóa thêm các dòng chỉ số độc quyền!
-- **9 Dòng Thuộc Tính Bổ Sung Độc Quyền**:
-  1. `⚔ Sát Thương Tấn Công` (`+Attack Damage`)
-  2. `❤ Sinh Lực Tối Đa` (`+Max Health`)
-  3. `🛡 Giáp Phòng Thủ` (`+Armor`)
-  4. `💎 Độ Cứng Giáp` (`+Armor Toughness`)
-  5. `⚡ Tốc Độ Xuất Chiêu` (`+Attack Speed`)
-  6. `👟 Tốc Độ Di Chuyển` (`+Movement Speed`)
-  7. `🩸 Hút Máu Chiến Đấu` *(Hồi máu theo % sát thương gây ra)*
-  8. `💥 Bạo Kích Huỷ Diệt` *(Xác suất nổ x1.5 sát thương kèm hiệu ứng)*
-  9. `🔥 Sát Thương Chuẩn (Xuyên Giáp)` *(Đánh xuyên giáp đối thủ & Boss MythicMobs)*
-- **Cân Bằng Tuyệt Đối**: Mặc định giới hạn tối đa **3 dòng thuộc tính bổ sung** trên mỗi món trang bị (`max-custom-attributes: 3`), mỗi dòng nâng tối đa **Cấp 10**.
-- **Nâng Cấp Phù Phép Vượt Giới Hạn (`ExcellentEnchants` & Vanilla)**: Tự động quét toàn bộ phù phép từ `Registry.ENCHANTMENT` của Paper 1.21+ (bao gồm mọi phù phép custom của **ExcellentEnchants**) để nâng cấp vượt mốc thông thường!
-- **Thất Bại Không Mất Đồ + Bảo Hiểm May Mắn (Pity)**: Cường hóa thất bại sẽ **giữ nguyên trạng thái trang bị**, chỉ tiêu hao nguyên liệu và cộng tích lũy **+3.5% Bảo Hiểm May Mắn** cho lần cường hóa kế tiếp!
+#### ⛏ Nhánh Công Cụ & Khai Thác (Cuốc chim, Xẻng, Rìu, Cuốc)
+1. **⛏ Mũi Khoan Địa Tâm (`VEIN_MINER`):** Khi đào 1 khối quặng hoặc chặt 1 khúc gỗ, tự động phá vỡ liên hoàn cả mạch quặng/cây gỗ liền kề *(Giữ phím Shift để tạm tắt khi cần đào 1 khối)*.
+2. **🔨 Búa Thần Khai Sơn (`DRILL_3X3`):** Mở rộng phạm vi đào đá, đất, sỏi, cát thành vùng rộng **3x3 khối** giúp đào hầm và san lấp mặt bằng nhanh gấp 9 lần.
+3. **🔥 Lò Nung Tự Động (`AUTO_SMELT`):** Tự động nung chảy Quặng Sắt, Vàng, Đồng, Cát, Đá cuội thành Thỏi kim loại & Kính ngay khi đào, kèm rơi thêm hạt Kinh Nghiệm (EXP) và nhân sản lượng theo cấp *Gia Tài*.
+4. **🧲 Từ Trường Hút Đồ (`TELEKINESIS`):** Mọi khoáng sản đào được hoặc vật phẩm rơi từ quái bị tiêu diệt sẽ **bay thẳng vào túi đồ** của bạn, không bao giờ sợ rơi xuống Lava.
+5. **🌾 Thu Hoạch Mùa Vụ (`HARVESTER`):** Khi thu hoạch lúa, cà rốt, khoai tây, củ dền đã chín sẽ **tự động gieo lại hạt giống mới** xuống đất.
+
+#### ⚔ Nhánh Vũ Khí Chiến Đấu (Kiếm, Rìu, Cung, Nỏ, Đinh ba, Chùy 1.21)
+6. **⚡ Lôi Phạt Thiên Kích (`THUNDER_STRIKE`):** Đòn đánh có xác suất triệu hồi tia sét giáng thẳng xuống mục tiêu, gây thêm sát thương sét.
+7. **❄ Hàn Băng Phong Ấn (`FROST_BITE`):** Đóng băng và làm chậm mục tiêu, khiến kẻ địch tê cóng không thể chạy trốn.
+8. **☠ Độc Dược Hắc Ám (`VENOMOUS`):** Tiêm độc tố gây hiệu ứng Trúng Độc (Poison) & Khô Héo (Wither) rút máu liên tục.
+9. **🗡 Trảm Quyết Đột Kích (`EXECUTIONER`):** Khi máu mục tiêu dưới 35%, đòn đánh bùng nổ thêm **+12% ▸ +60% sát thương kết liễu**.
+
+#### 🛡 Nhánh Giáp Trụ Hộ Thể (Mũ, Áo, Quần, Ủng, Elytra, Khiên)
+10. **💚 Sinh Mệnh Tái Tạo (`VITALITY_REGEN`):** Khi bị tấn công, tự động kích hoạt luồng sinh khí Hồi Phục (Regeneration).
+11. **🔥 Khiên Hỏa Diệm (`MOLTEN_SHIELD`):** Thiêu đốt kẻ tấn công bạn và ban hiệu ứng Kháng Lửa bảo vệ cơ thể.
+12. **🌪 Bước Chân Thần Tốc (`WIND_STEP`):** Khi máu tụt xuống dưới 40%, tự động kích hoạt **Tăng Tốc II & Lá Chắn Tim Vàng (Absorption)** để thoát hiểm hoặc lật kèo.
 
 ---
 
-## 🛠 Công Thức Chế Tạo Khối & Công Cụ Đặc Biệt
-1. **⚒ Đài Nâng Cấp Tối Thượng (Khối chức năng đặt dưới đất - Có Hologram nổi)**:
-   - Hàng 1: `Thỏi Vàng` | `Kim Cương` | `Thỏi Vàng`
-   - Hàng 2: `Kim Cương` | `Cái Đe (Anvil)` | `Kim Cương`
-   - Hàng 3: `Thỏi Vàng` | `Khối Vàng` | `Thỏi Vàng`
-2. **⚙ Sổ Tay Nâng Cấp Di Động (Công cụ cầm tay mở mọi lúc mọi nơi)**:
-   - Hàng 1: `Trống` | `Thỏi Vàng` | `Trống`
-   - Hàng 2: `Kim Cương` | `Quyển Sách` | `Kim Cương`
-   - Hàng 3: `Trống` | `Thỏi Vàng` | `Trống`
+### 2. 💎 Đá Cường Hóa, Tinh Thể & Bảo Vật Thần Thoại Nội Tại
+Plugin tích hợp sẵn bộ nguyên liệu và trang bị Thần Thoại riêng trong kho **`TÌM PHẦN THƯỞNG`** và bàn chế tạo:
+- **💎 Đá Cường Hóa Tinh Anh (`1,000 V`):** Chế tạo từ *Thỏi Vàng + Kim Cương + Mảnh Thạch Anh Tím* (hoặc nhận qua lệnh `/nangcap stone`).
+- **🔮 Tinh Thể Cổ Ngữ Thần Thoại (`3,000 V`):** Nguyên liệu cao cấp dùng để khắc Cổ Ngữ và đột phá trang bị (`/nangcap crystal`).
+- **🍀 Bùa Đại Cát TN-Upgrader (`2,500 V`):** Tín vật may mắn giá trị cao.
+- **4 Bảo Vật Thần Thoại Độc Quyền:**
+  - **⛏ Cuốc Chim Thần Công Khai Sơn (`18,000 V`)**
+  - **⚔ Huyết Kiếm Đoạt Mệnh (`20,000 V`)**
+  - **🪓 Chiến Rìu Băng Lôi Khai Thiên (`17,500 V`)**
+  - **🛡 Chiến Giáp Hộ Thần Bất Diệt (`22,000 V`)**
+
+---
+
+### 3. ⚔ Bàn Cường Hóa Trang Bị 3 Tab & Đấu Giá Vật Phẩm 3x3
+- **Bàn Đấu Giá Vật Phẩm (`NÂNG CẤP VẬT PHẨM`):** Lưới đồ cược 3x3 (hỗ trợ **1-Chạm cho PE & PC**), vòng quay tỷ lệ may rủi kịch tính (`0.00%` ▸ `100.00%`), hệ số nhân nhanh `x1` ▸ `x10`, kho `Tìm Phần Thưởng`, `Màu Giao diện`, `Yêu thích`, `Cài đặt`, `Thống kê Top Server`.
+- **Bàn Cường Hóa Trang Bị (`CƯỜNG HÓA TRANG BỊ & CỔ NGỮ`)** chia làm **3 Tab rõ ràng**:
+  - **Tab 1 (`Ô 15` - Thuộc Tính Cường Hóa):** 9 chỉ số gốc (*Sát Thương, Sinh Lực, Giáp, Độ Cứng Giáp, Tốc Đánh & Đào Nhanh +25%/cấp, Tốc Chạy, Hút Máu, Bạo Kích, Sát Thương Chuẩn*).
+  - **Tab 2 (`Ô 16` - Phù Phép Cơ Bản):** *Hiệu Suất (Đào Nhanh), Chậm Hỏng (Độ Bền), Gia Tài, Sửa Chữa, Chạm Nhẹ, Đào Nhanh Dưới Nước, Sắc Bén, Bảo Vệ...* nâng vượt giới hạn thông thường.
+  - **Tab 3 (`Ô 17` - Cổ Ngữ Độc Quyền TN-Upgrader):** Khắc 12 Cổ Ngữ nội tại độc quyền lên Công cụ, Vũ khí, Giáp.
+  - **Bảo Hiểm May Mắn (Pity):** Đập xịt **GIỮ NGUYÊN 100% TRANG BỊ** và cộng tích lũy **+3.5% May Mắn** cho lần đập kế tiếp!
 
 ---
 
 ## 💻 Lệnh & Quyền Hạn (Commands & Permissions)
 | Lệnh | Mô tả | Quyền hạn |
 |---|---|---|
-| `/upgrader` (hoặc `/nangcap`, `/nc`, `/tnupgrader`) | Mở giao diện **Nâng Cấp Vật Phẩm** | `tnupgrader.use` (Mặc định: `true`) |
-| `/upgrader equip` | Mở nhanh **Bàn Cường Hóa Trang Bị End-Game** | `tnupgrader.use` |
+| `/upgrader` (hoặc `/nangcap`, `/nc`, `/tnupgrader`) | Mở giao diện **Nâng Cấp Vật Phẩm (Đấu Giá 3x3)** | `tnupgrader.use` (Mặc định: `true`) |
+| `/upgrader equip` | Mở nhanh **Bàn Cường Hóa Trang Bị & Cổ Ngữ** | `tnupgrader.use` |
 | `/upgrader stats` | Mở bảng **Thống Kê & Top Server** | `tnupgrader.use` |
 | `/upgrader tool [tên] [số_lượng]` | Nhận **Sổ Tay Nâng Cấp Di Động** | `tnupgrader.admin` (Mặc định: `op`) |
 | `/upgrader block [tên] [số_lượng]` | Nhận **Đài Nâng Cấp Tối Thượng** | `tnupgrader.admin` |
+| `/upgrader stone [tên] [số_lượng]` | Nhận **Đá Cường Hóa Tinh Anh (1,000 V)** | `tnupgrader.admin` |
+| `/upgrader crystal [tên] [số_lượng]` | Nhận **Tinh Thể Cổ Ngữ Thần Thoại (3,000 V)** | `tnupgrader.admin` |
 | `/upgrader setvalue <giá_trị_V>` | Đặt điểm giá trị `V` cho vật phẩm đang cầm trên tay | `tnupgrader.admin` |
-| `/upgrader reload` | Tải lại `config.yml`, bảng giá `V` và hooks | `tnupgrader.admin` |
+| `/upgrader reload` | Tải lại `config.yml`, bảng giá `V` và công thức | `tnupgrader.admin` |

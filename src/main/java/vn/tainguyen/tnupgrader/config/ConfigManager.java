@@ -12,8 +12,12 @@ import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import vn.tainguyen.tnupgrader.TNUpgraderPlugin;
+import vn.tainguyen.tnupgrader.hook.ExcellentEnchantsHook;
+import vn.tainguyen.tnupgrader.manager.EquipmentManager;
 import vn.tainguyen.tnupgrader.model.ItemCategory;
+import vn.tainguyen.tnupgrader.model.NativeEnchantment;
 import vn.tainguyen.tnupgrader.model.RewardItem;
+import vn.tainguyen.tnupgrader.model.UpgradeAttribute;
 import vn.tainguyen.tnupgrader.util.ItemBuilder;
 import vn.tainguyen.tnupgrader.util.TextUtil;
 
@@ -116,8 +120,38 @@ public class ConfigManager {
             rewardCatalog.put(id, reward);
         }
 
-        // 2. Vật phẩm MythicMobs
-        if (plugin.getMythicMobsHook() != null && plugin.getConfig().getBoolean("hooks.mythicmobs.enabled", true)) {
+        // 2. HỆ SINH THÁI VẬT PHẨM & TRANG BỊ ĐỘC QUYỀN TN-UPGRADER (Hoạt động độc lập 100%)
+        registerNativeEcosystemItems();
+
+        // 3. Sách Phù Phép Cơ Bản (Hiệu Suất, Chậm Hỏng, Đào Nhanh, Gia Tài, Sắc Bén, Bảo Vệ...)
+        if (plugin.getExcellentEnchantsHook() != null
+                && plugin.getConfig().getBoolean("hooks.excellentenchants.include-books-in-reward-browser", true)) {
+            double baseBookVal = plugin.getConfig().getDouble("hooks.excellentenchants.base-custom-book-value", 1800.0);
+            for (Enchantment enchant : plugin.getExcellentEnchantsHook().getAllRegisteredEnchantments()) {
+                int maxLvl = Math.max(1, enchant.getMaxLevel());
+                boolean isCustom = plugin.getExcellentEnchantsHook().isCustomEnchantment(enchant);
+                if (isCustom || isFeaturedVanillaEnchant(enchant)) {
+                    double bookVal = isCustom ? baseBookVal : Math.round(baseBookVal * 0.65);
+                    ItemStack bookStack = plugin.getExcellentEnchantsHook().createEnchantedBook(enchant, maxLvl);
+                    String enchantName = plugin.getExcellentEnchantsHook().getEnchantDisplayName(enchant)
+                            + " " + ExcellentEnchantsHook.toRoman(maxLvl);
+                    String id = "enchant:" + enchant.getKey().getKey().toLowerCase(Locale.ROOT);
+                    RewardItem reward = new RewardItem(
+                            id,
+                            "Sách " + enchantName,
+                            Material.ENCHANTED_BOOK,
+                            bookStack,
+                            bookVal,
+                            ItemCategory.SPECIAL,
+                            RewardItem.SourceType.EXCELLENT_ENCHANT
+                    );
+                    rewardCatalog.put(id, reward);
+                }
+            }
+        }
+
+        // 4. (Tùy chọn) Vật phẩm MythicMobs nếu server có cài MythicMobs
+        if (plugin.getMythicMobsHook() != null && plugin.getMythicMobsHook().isEnabled()) {
             for (Map.Entry<String, Double> entry : mythicValues.entrySet()) {
                 String mythicId = entry.getKey();
                 double val = entry.getValue();
@@ -136,33 +170,224 @@ public class ConfigManager {
                 rewardCatalog.put(id, reward);
             }
         }
+    }
 
-        // 3. Sách Phù Phép Cao Cấp (Vanilla & ExcellentEnchants)
-        if (plugin.getExcellentEnchantsHook() != null
-                && plugin.getConfig().getBoolean("hooks.excellentenchants.include-books-in-reward-browser", true)) {
-            double baseBookVal = plugin.getConfig().getDouble("hooks.excellentenchants.base-custom-book-value", 1800.0);
-            for (Enchantment enchant : plugin.getExcellentEnchantsHook().getAllRegisteredEnchantments()) {
-                int maxLvl = Math.max(1, enchant.getMaxLevel());
-                boolean isCustom = plugin.getExcellentEnchantsHook().isCustomEnchantment(enchant);
-                // Đưa tất cả sách ExcellentEnchants và các sách Vanilla quan trọng vào kho phần thưởng
-                if (isCustom || isFeaturedVanillaEnchant(enchant)) {
-                    double bookVal = isCustom ? baseBookVal : (baseBookVal * 0.65);
-                    ItemStack bookStack = plugin.getExcellentEnchantsHook().createEnchantedBook(enchant, maxLvl);
-                    String enchantName = plugin.getExcellentEnchantsHook().getEnchantDisplayName(enchant)
-                            + " " + plugin.getExcellentEnchantsHook().toRoman(maxLvl);
-                    String id = "enchant:" + enchant.getKey().getKey().toLowerCase(Locale.ROOT);
-                    RewardItem reward = new RewardItem(
-                            id,
-                            "Sách " + enchantName,
-                            Material.ENCHANTED_BOOK,
-                            bookStack,
-                            bookVal,
-                            ItemCategory.SPECIAL,
-                            RewardItem.SourceType.EXCELLENT_ENCHANT
-                    );
-                    rewardCatalog.put(id, reward);
-                }
-            }
+    /**
+     * Khởi tạo hệ sinh thái Đá Cường Hóa, Tinh Thể Cổ Ngữ và Trang Bị Thần Thoại của riêng TN-UpgraderItems
+     */
+    private void registerNativeEcosystemItems() {
+        // A. Đá Cường Hóa & Tinh Thể Nâng Cấp Nội Tại
+        ItemStack upgradeStone = createUpgradeStoneItem(1);
+        rewardCatalog.put("tn:upgrade_stone", new RewardItem(
+                "tn:upgrade_stone",
+                "Đá Cường Hóa Tinh Anh",
+                Material.AMETHYST_SHARD,
+                upgradeStone,
+                1000.0,
+                ItemCategory.MINERALS,
+                RewardItem.SourceType.VANILLA
+        ));
+
+        ItemStack runeCrystal = createRuneCrystalItem(1);
+        rewardCatalog.put("tn:rune_crystal", new RewardItem(
+                "tn:rune_crystal",
+                "Tinh Thể Cổ Ngữ Thần Thoại",
+                Material.ECHO_SHARD,
+                runeCrystal,
+                3000.0,
+                ItemCategory.MINERALS,
+                RewardItem.SourceType.VANILLA
+        ));
+
+        ItemStack luckyCharm = createLuckyCharmItem(1);
+        rewardCatalog.put("tn:lucky_charm", new RewardItem(
+                "tn:lucky_charm",
+                "Bùa Đại Cát TN-Upgrader",
+                Material.HEART_OF_THE_SEA,
+                luckyCharm,
+                2500.0,
+                ItemCategory.SPECIAL,
+                RewardItem.SourceType.VANILLA
+        ));
+
+        // B. 4 Trang Bị & Công Cụ Thần Thoại Nội Tại (Tích hợp sẵn Cổ Ngữ & Thuộc Tính Độc Quyền)
+        EquipmentManager eqMgr = plugin.getEquipmentManager();
+        if (eqMgr != null) {
+            // 1. Cuốc Chim Thần Công Khai Sơn
+            ItemStack legendPick = new ItemBuilder(Material.NETHERITE_PICKAXE)
+                    .name("&b&l⛏ CUỐC CHIM THẦN CÔNG KHAI SƠN")
+                    .lore(
+                            "&8[Bảo Vật Thần Thoại TN-Upgrader]",
+                            "&7Tuyệt tác công cụ khai thác tối thượng,",
+                            "&7đào xuyên lòng đất và tự động luyện kim!"
+                    )
+                    .enchant(Enchantment.EFFICIENCY, 6)
+                    .enchant(Enchantment.UNBREAKING, 5)
+                    .enchant(Enchantment.FORTUNE, 4)
+                    .enchant(Enchantment.MENDING, 1)
+                    .build();
+            setCustomUnitValue(legendPick, 18000.0);
+            eqMgr.upgradeAttribute(legendPick, UpgradeAttribute.ATTACK_SPEED);
+            eqMgr.upgradeAttribute(legendPick, UpgradeAttribute.ATTACK_SPEED);
+            eqMgr.upgradeNativeEnchant(legendPick, NativeEnchantment.VEIN_MINER);
+            eqMgr.upgradeNativeEnchant(legendPick, NativeEnchantment.VEIN_MINER);
+            eqMgr.upgradeNativeEnchant(legendPick, NativeEnchantment.DRILL_3X3);
+            eqMgr.upgradeNativeEnchant(legendPick, NativeEnchantment.AUTO_SMELT);
+            rewardCatalog.put("tn:legend_pickaxe", new RewardItem(
+                    "tn:legend_pickaxe",
+                    "Cuốc Chim Thần Công Khai Sơn",
+                    Material.NETHERITE_PICKAXE,
+                    legendPick,
+                    18000.0,
+                    ItemCategory.TOOLS,
+                    RewardItem.SourceType.VANILLA
+            ));
+
+            // 2. Huyết Kiếm Đoạt Mệnh
+            ItemStack legendSword = new ItemBuilder(Material.NETHERITE_SWORD)
+                    .name("&c&l⚔ HUYẾT KIẾM ĐOẠT MỆNH")
+                    .lore(
+                            "&8[Vũ Khí Thần Thoại TN-Upgrader]",
+                            "&7Thanh thần kiếm triệu hồi thiên lôi",
+                            "&7và hút sinh lực kẻ địch trong nháy mắt!"
+                    )
+                    .enchant(Enchantment.SHARPNESS, 6)
+                    .enchant(Enchantment.UNBREAKING, 5)
+                    .enchant(Enchantment.LOOTING, 4)
+                    .enchant(Enchantment.MENDING, 1)
+                    .build();
+            setCustomUnitValue(legendSword, 20000.0);
+            eqMgr.upgradeAttribute(legendSword, UpgradeAttribute.ATTACK_DAMAGE);
+            eqMgr.upgradeAttribute(legendSword, UpgradeAttribute.LIFESTEAL);
+            eqMgr.upgradeAttribute(legendSword, UpgradeAttribute.CRIT_STRIKE);
+            eqMgr.upgradeNativeEnchant(legendSword, NativeEnchantment.THUNDER_STRIKE);
+            eqMgr.upgradeNativeEnchant(legendSword, NativeEnchantment.EXECUTIONER);
+            rewardCatalog.put("tn:legend_sword", new RewardItem(
+                    "tn:legend_sword",
+                    "Huyết Kiếm Đoạt Mệnh",
+                    Material.NETHERITE_SWORD,
+                    legendSword,
+                    20000.0,
+                    ItemCategory.EQUIPMENT,
+                    RewardItem.SourceType.VANILLA
+            ));
+
+            // 3. Chiến Rìu Băng Lôi
+            ItemStack legendAxe = new ItemBuilder(Material.NETHERITE_AXE)
+                    .name("&e&l🪓 CHIẾN RÌU BĂNG LÔI KHAI THIÊN")
+                    .lore(
+                            "&8[Vũ Khí & Công Cụ Thần Thoại TN-Upgrader]",
+                            "&7Vừa chặt đổ cả rừng cây trong 1 nhát,",
+                            "&7vừa đóng băng và kết liễu kẻ địch!"
+                    )
+                    .enchant(Enchantment.SHARPNESS, 6)
+                    .enchant(Enchantment.EFFICIENCY, 6)
+                    .enchant(Enchantment.UNBREAKING, 5)
+                    .build();
+            setCustomUnitValue(legendAxe, 17500.0);
+            eqMgr.upgradeAttribute(legendAxe, UpgradeAttribute.ATTACK_DAMAGE);
+            eqMgr.upgradeAttribute(legendAxe, UpgradeAttribute.TRUE_DAMAGE);
+            eqMgr.upgradeNativeEnchant(legendAxe, NativeEnchantment.VEIN_MINER);
+            eqMgr.upgradeNativeEnchant(legendAxe, NativeEnchantment.FROST_BITE);
+            rewardCatalog.put("tn:legend_axe", new RewardItem(
+                    "tn:legend_axe",
+                    "Chiến Rìu Băng Lôi Khai Thiên",
+                    Material.NETHERITE_AXE,
+                    legendAxe,
+                    17500.0,
+                    ItemCategory.EQUIPMENT,
+                    RewardItem.SourceType.VANILLA
+            ));
+
+            // 4. Chiến Giáp Hộ Thần Bất Diệt
+            ItemStack legendChest = new ItemBuilder(Material.NETHERITE_CHESTPLATE)
+                    .name("&6&l🛡 CHIẾN GIÁP HỘ THẦN BẤT DIỆT")
+                    .lore(
+                            "&8[Giáp Thần Thoại TN-Upgrader]",
+                            "&7Áo giáp hộ thể tự động hồi phục máu",
+                            "&7và phản lửa thiêu rụi kẻ tấn công!"
+                    )
+                    .enchant(Enchantment.PROTECTION, 5)
+                    .enchant(Enchantment.UNBREAKING, 5)
+                    .enchant(Enchantment.MENDING, 1)
+                    .build();
+            setCustomUnitValue(legendChest, 22000.0);
+            eqMgr.upgradeAttribute(legendChest, UpgradeAttribute.MAX_HEALTH);
+            eqMgr.upgradeAttribute(legendChest, UpgradeAttribute.MAX_HEALTH);
+            eqMgr.upgradeAttribute(legendChest, UpgradeAttribute.ARMOR);
+            eqMgr.upgradeNativeEnchant(legendChest, NativeEnchantment.VITALITY_REGEN);
+            eqMgr.upgradeNativeEnchant(legendChest, NativeEnchantment.MOLTEN_SHIELD);
+            eqMgr.upgradeNativeEnchant(legendChest, NativeEnchantment.WIND_STEP);
+            rewardCatalog.put("tn:legend_chestplate", new RewardItem(
+                    "tn:legend_chestplate",
+                    "Chiến Giáp Hộ Thần Bất Diệt",
+                    Material.NETHERITE_CHESTPLATE,
+                    legendChest,
+                    22000.0,
+                    ItemCategory.EQUIPMENT,
+                    RewardItem.SourceType.VANILLA
+            ));
+        }
+    }
+
+    public ItemStack createUpgradeStoneItem(int amount) {
+        ItemStack stack = new ItemBuilder(Material.AMETHYST_SHARD, amount)
+                .name("&b&l💎 ĐÁ CƯỜNG HÓA TINH ANH")
+                .lore(
+                        "&8[Nguyên Liệu Độc Quyền TN-Upgrader]",
+                        "&7 Tinh thể kết tụ ma lực tinh khiết,",
+                        "&7 chuyên dùng để nạp điểm nâng cấp trang bị.",
+                        "",
+                        "&6▸ Giá trị quy đổi: &e1,000 V / viên",
+                        "&a▸ Công dụng: &fĐặt vào Ô Nguyên Liệu Cường Hóa",
+                        "&f  hoặc Lưới Đồ Cược 3x3 để tăng mạnh tỉ lệ thắng!"
+                )
+                .glow(true)
+                .build();
+        setCustomUnitValue(stack, 1000.0);
+        return stack;
+    }
+
+    public ItemStack createRuneCrystalItem(int amount) {
+        ItemStack stack = new ItemBuilder(Material.ECHO_SHARD, amount)
+                .name("&d&l🔮 TINH THỂ CỔ NGỮ THẦN THOẠI")
+                .lore(
+                        "&8[Nguyên Liệu Cao Cấp TN-Upgrader]",
+                        "&7 Chứa đựng sức mạnh cổ ngữ nguyên thủy,",
+                        "&7 giúp đột phá giới hạn Vũ khí, Công cụ & Giáp.",
+                        "",
+                        "&6▸ Giá trị quy đổi: &e3,000 V / viên",
+                        "&a▸ Công dụng: &fNạp vào Bàn Cường Hóa Trang Bị",
+                        "&f  để nâng cấp Cổ Ngữ Độc Quyền & Thuộc Tính!"
+                )
+                .glow(true)
+                .build();
+        setCustomUnitValue(stack, 3000.0);
+        return stack;
+    }
+
+    public ItemStack createLuckyCharmItem(int amount) {
+        ItemStack stack = new ItemBuilder(Material.HEART_OF_THE_SEA, amount)
+                .name("&a&l🍀 BÙA ĐẠI CÁT TN-UPGRADER")
+                .lore(
+                        "&8[Bảo Vật May Mắn TN-Upgrader]",
+                        "&7 Tín vật mang lại vận may rực rỡ cho",
+                        "&7 các thợ rèn khi nâng cấp trang bị.",
+                        "",
+                        "&6▸ Giá trị quy đổi: &e2,500 V / bùa"
+                )
+                .glow(true)
+                .build();
+        setCustomUnitValue(stack, 2500.0);
+        return stack;
+    }
+
+    public void setCustomUnitValue(ItemStack item, double value) {
+        if (item == null || item.getType().isAir()) return;
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            meta.getPersistentDataContainer().set(customValueKey, PersistentDataType.DOUBLE, value);
+            item.setItemMeta(meta);
         }
     }
 
@@ -184,9 +409,6 @@ public class ConfigManager {
         return rewardCatalog.get(id.toLowerCase(Locale.ROOT));
     }
 
-    /**
-     * Tính giá trị (V) của 1 đơn vị vật phẩm (Chưa nhân số lượng stack)
-     */
     public double getUnitValue(ItemStack item) {
         if (item == null || item.getType().isAir()) {
             return 0.0;
@@ -202,8 +424,7 @@ public class ConfigManager {
             }
         }
 
-        // Kiểm tra vật phẩm MythicMobs
-        if (plugin.getMythicMobsHook() != null) {
+        if (plugin.getMythicMobsHook() != null && plugin.getMythicMobsHook().isEnabled()) {
             String mythicId = plugin.getMythicMobsHook().getMythicItemId(item);
             if (mythicId != null) {
                 for (Map.Entry<String, Double> entry : mythicValues.entrySet()) {
@@ -225,7 +446,6 @@ public class ConfigManager {
             }
         }
 
-        // Cộng thêm giá trị nếu trang bị đã có Phù Phép hoặc Cấp Cường Hóa End-Game
         if (base > 0 && meta != null) {
             if (meta.hasEnchants()) {
                 for (int lvl : meta.getEnchants().values()) {
@@ -242,9 +462,6 @@ public class ConfigManager {
         return base;
     }
 
-    /**
-     * Tính tổng giá trị (V) của cả cụm ItemStack (Đơn giá * Số lượng)
-     */
     public double getStackValue(ItemStack item) {
         if (item == null || item.getType().isAir()) {
             return 0.0;
@@ -252,9 +469,6 @@ public class ConfigManager {
         return getUnitValue(item) * item.getAmount();
     }
 
-    /**
-     * Tính tổng giá trị (V) của toàn bộ vật phẩm có thể đặt cược trong túi đồ người chơi
-     */
     public double getPlayerInventoryValue(Player player) {
         double total = 0.0;
         for (ItemStack item : player.getInventory().getStorageContents()) {
@@ -272,9 +486,6 @@ public class ConfigManager {
         buildRewardCatalog();
     }
 
-    // ==========================================================================
-    // KHỐI ĐÀI NÂNG CẤP & SỔ TAY NÂNG CẤP DI ĐỘNG
-    // ==========================================================================
     public ItemStack createUpgraderBlockItem(int amount) {
         String matName = plugin.getConfig().getString("crafting.upgrader-block.material", "ANVIL");
         Material mat = Material.matchMaterial(matName);
@@ -318,8 +529,10 @@ public class ConfigManager {
     public void registerRecipes() {
         NamespacedKey blockKey = new NamespacedKey(plugin, "upgrader_block_recipe");
         NamespacedKey toolKey = new NamespacedKey(plugin, "portable_tool_recipe");
+        NamespacedKey stoneKey = new NamespacedKey(plugin, "upgrade_stone_recipe");
         Bukkit.removeRecipe(blockKey);
         Bukkit.removeRecipe(toolKey);
+        Bukkit.removeRecipe(stoneKey);
 
         if (plugin.getConfig().getBoolean("crafting.upgrader-block.enabled", true)) {
             ShapedRecipe blockRecipe = new ShapedRecipe(blockKey, createUpgraderBlockItem(1));
@@ -356,6 +569,14 @@ public class ConfigManager {
                 Bukkit.addRecipe(toolRecipe);
             }
         }
+
+        // Công thức chế tạo Đá Cường Hóa Tinh Anh (1,000 V) của riêng TN-UpgraderItems
+        ShapedRecipe stoneRecipe = new ShapedRecipe(stoneKey, createUpgradeStoneItem(1));
+        stoneRecipe.shape("GAG", "ADA", "GAG");
+        stoneRecipe.setIngredient('G', Material.GOLD_INGOT);
+        stoneRecipe.setIngredient('A', Material.AMETHYST_SHARD);
+        stoneRecipe.setIngredient('D', Material.DIAMOND);
+        Bukkit.addRecipe(stoneRecipe);
     }
 
     public String getPrefix() {

@@ -9,6 +9,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitTask;
 import vn.tainguyen.tnupgrader.TNUpgraderPlugin;
 import vn.tainguyen.tnupgrader.model.ItemCategory;
+import vn.tainguyen.tnupgrader.model.NativeEnchantment;
 import vn.tainguyen.tnupgrader.model.RewardItem;
 import vn.tainguyen.tnupgrader.model.SortOrder;
 import vn.tainguyen.tnupgrader.model.UpgradeAttribute;
@@ -36,6 +37,12 @@ public class UpgraderSession {
         SPINNING,
         RESULT_WIN,
         RESULT_LOSS
+    }
+
+    public enum UpgradeTab {
+        ATTRIBUTES,
+        VANILLA_ENCHANTS,
+        NATIVE_RUNES
     }
 
     private final TNUpgraderPlugin plugin;
@@ -69,7 +76,8 @@ public class UpgraderSession {
     private final ItemStack[] materialItems = new ItemStack[4];
     private UpgradeAttribute selectedAttribute = UpgradeAttribute.ATTACK_DAMAGE;
     private Enchantment selectedEnchantment = null;
-    private boolean enchantUpgradeTab = false;
+    private NativeEnchantment selectedNativeEnchant = NativeEnchantment.VEIN_MINER;
+    private UpgradeTab upgradeTab = UpgradeTab.ATTRIBUTES;
     private int enchantPage = 0;
 
     public UpgraderSession(TNUpgraderPlugin plugin, UUID playerUuid) {
@@ -418,12 +426,28 @@ public class UpgraderSession {
         this.selectedEnchantment = selectedEnchantment;
     }
 
+    public NativeEnchantment getSelectedNativeEnchant() {
+        return selectedNativeEnchant;
+    }
+
+    public void setSelectedNativeEnchant(NativeEnchantment selectedNativeEnchant) {
+        this.selectedNativeEnchant = selectedNativeEnchant;
+    }
+
+    public UpgradeTab getUpgradeTab() {
+        return upgradeTab;
+    }
+
+    public void setUpgradeTab(UpgradeTab upgradeTab) {
+        this.upgradeTab = upgradeTab != null ? upgradeTab : UpgradeTab.ATTRIBUTES;
+    }
+
     public boolean isEnchantUpgradeTab() {
-        return enchantUpgradeTab;
+        return upgradeTab == UpgradeTab.VANILLA_ENCHANTS;
     }
 
     public void setEnchantUpgradeTab(boolean enchantUpgradeTab) {
-        this.enchantUpgradeTab = enchantUpgradeTab;
+        this.upgradeTab = enchantUpgradeTab ? UpgradeTab.VANILLA_ENCHANTS : UpgradeTab.ATTRIBUTES;
     }
 
     public int getEnchantPage() {

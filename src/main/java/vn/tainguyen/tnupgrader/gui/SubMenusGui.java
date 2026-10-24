@@ -274,14 +274,15 @@ public class SubMenusGui {
                 .build());
 
         inv.setItem(14, new ItemBuilder(Material.NETHERITE_SWORD)
-                .name("&c&l3. Cường Hóa Trang Bị End-Game")
+                .name("&c&l3. Hệ Sinh Thái Cường Hóa & Cổ Ngữ Độc Quyền")
                 .lore(
-                        "&7Dành cho đồ Netherite full bùa & đồ &dMythicMobs&7:",
-                        "&f• Ép tối đa &6" + plugin.getEquipmentManager().getMaxCustomAttributes()
-                                + " dòng thuộc tính &fbổ sung (Cân bằng game).",
-                        "&f• Gồm: &cSát thương, ❤ Máu, 🛡 Giáp, 🩸 Hút máu,",
-                        "&f  &6💥 Chí mạng, 🔥 Sát thương chuẩn xuyên giáp!",
-                        "&f• Nâng cấp cả Phù Phép &bExcellentEnchants &fvượt cấp!",
+                        "&7Hoạt động độc lập 100% với 3 nhánh nâng cấp:",
+                        "&f• &6Tab 1 (Thuộc Tính): &7Đào Nhanh +25%/cấp, Sát thương,",
+                        "&7  Máu, Giáp, Hút máu, Chí mạng, Đam chuẩn xuyên giáp.",
+                        "&f• &dTab 2 (Phù Phép): &7Hiệu Suất, Chậm Hỏng, Gia Tài,",
+                        "&7  Sửa Chữa, Chạm Nhẹ, Đào Nhanh Dưới Nước...",
+                        "&f• &bTab 3 (12 Cổ Ngữ Độc Quyền TN): &7Mũi Khoan Địa Tâm",
+                        "&7  (Đào mạch quặng), Búa 3x3, Lò Nung Tự Động, Hút Đồ...",
                         "&f• Thất bại &aGIỮ NGUYÊN ĐỒ &f+ tích lũy &e% May Mắn&f!"
                 )
                 .glow(true)

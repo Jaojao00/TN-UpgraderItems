@@ -14,6 +14,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import vn.tainguyen.tnupgrader.TNUpgraderPlugin;
 import vn.tainguyen.tnupgrader.hook.ExcellentEnchantsHook;
 import vn.tainguyen.tnupgrader.manager.EquipmentManager;
+import vn.tainguyen.tnupgrader.model.NativeEnchantment;
 import vn.tainguyen.tnupgrader.model.PlayerProfile;
 import vn.tainguyen.tnupgrader.model.UiTheme;
 import vn.tainguyen.tnupgrader.model.UpgradeAttribute;
@@ -21,6 +22,7 @@ import vn.tainguyen.tnupgrader.util.ItemBuilder;
 import vn.tainguyen.tnupgrader.util.TextUtil;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
@@ -34,6 +36,7 @@ public class EquipmentUpgraderGui {
 
     public static final int ATTR_TAB_SLOT = 15;
     public static final int ENCHANT_TAB_SLOT = 16;
+    public static final int RUNE_TAB_SLOT = 17;
 
     public static final int RESET_ATTR_SLOT = 24;
     public static final int EXECUTE_UPGRADE_SLOT = 25;
@@ -56,14 +59,20 @@ public class EquipmentUpgraderGui {
 
     private final TNUpgraderPlugin plugin;
     private final NamespacedKey enchantKeyTag;
+    private final NamespacedKey runeKeyTag;
 
     public EquipmentUpgraderGui(TNUpgraderPlugin plugin) {
         this.plugin = plugin;
         this.enchantKeyTag = new NamespacedKey(plugin, "equip_enchant_key");
+        this.runeKeyTag = new NamespacedKey(plugin, "equip_rune_key");
     }
 
     public NamespacedKey getEnchantKeyTag() {
         return enchantKeyTag;
+    }
+
+    public NamespacedKey getRuneKeyTag() {
+        return runeKeyTag;
     }
 
     public void open(Player player, UpgraderSession session) {
@@ -73,7 +82,7 @@ public class EquipmentUpgraderGui {
         PlayerProfile profile = plugin.getProfileManager().getProfile(player);
         UiTheme theme = profile.getTheme();
 
-        Component title = TextUtil.color("&8&l✦ " + theme.getAccentColor() + "&lCƯỜNG HÓA TRANG BỊ & PHÙ PHÉP &8&l✦");
+        Component title = TextUtil.color("&8&l✦ " + theme.getAccentColor() + "&lCƯỜNG HÓA TRANG BỊ & CỔ NGỮ &8&l✦");
         Inventory inv = Bukkit.createInventory(null, 54, title);
         session.setActiveInventory(inv);
 
@@ -97,19 +106,18 @@ public class EquipmentUpgraderGui {
         inv.setItem(0, new ItemBuilder(Material.KNOWLEDGE_BOOK)
                 .name("&6&l📖 HƯỚNG DẪN CƯỜNG HÓA (RẤT DỄ)")
                 .lore(
-                        "&fChỉ cần làm theo &e4 bước đơn giản &fsau:",
+                        "&fHệ thống Cường Hóa Độc Quyền của &eTN-UpgraderItems",
+                        "&f(Hoạt động độc lập 100% cho Công cụ, Vũ khí, Giáp):",
                         "",
                         "&e▸ Bước 1: &fChạm vào &bCuốc, Rìu, Xẻng, Kiếm, Giáp",
-                        "&f  trong túi đồ bên dưới để đưa lên &bÔ Trang Bị&f.",
-                        "&e▸ Bước 2: &fChọn &6Tab Thuộc Tính &f(Ô 15) hoặc",
-                        "&f  &dTab Phù Phép: Hiệu Suất, Chậm Hỏng... &f(Ô 16).",
-                        "&e▸ Bước 3: &fChạm vào dòng chỉ số / phù phép ở hàng",
-                        "&f  dưới cùng rồi chạm vào &6Vàng, Kim cương, Sắt...",
-                        "&f  dưới túi đồ để nạp điểm &6(V) &fnâng cấp.",
-                        "&e▸ Bước 4: &fBấm nút &6&l⚡ CƯỜNG HÓA NGAY &fđể quay!",
-                        "",
-                        "&a✔ Đặc biệt: Đập xịt KHÔNG MẤT ĐỒ, còn được cộng",
-                        "&a  thêm % Bảo Hiểm May Mắn cho lần đập kế tiếp!"
+                        "&f  dưới túi đồ để đặt lên &bÔ Trang Bị (Ô 10)&f.",
+                        "&e▸ Bước 2: &fChọn 1 trong 3 nhánh nâng cấp:",
+                        "&f  • &6Ô 15 (Tab 1): &fThuộc Tính Cường Hóa (Đào nhanh, Máu...)",
+                        "&f  • &dÔ 16 (Tab 2): &fPhù Phép (Hiệu Suất, Chậm Hỏng, Gia Tài...)",
+                        "&f  • &bÔ 17 (Tab 3): &fCổ Ngữ Độc Quyền (Đào Mạch Quặng, 3x3...)",
+                        "&e▸ Bước 3: &fChạm vào dòng muốn nâng ở hàng dưới cùng",
+                        "&f  rồi nạp Khoáng sản / Đá Cường Hóa vào 4 ô nguyên liệu.",
+                        "&e▸ Bước 4: &fBấm nút &6&l⚡ CƯỜNG HÓA NGAY &fđể quay!"
                 )
                 .glow(true)
                 .build());
@@ -118,7 +126,7 @@ public class EquipmentUpgraderGui {
                 .name("&e&l🎲 CHUYỂN VỀ: ĐẤU GIÁ VẬT PHẨM")
                 .lore(
                         "&7Chuyển sang bàn &6Đấu Giá Nâng Đời Vật Phẩm",
-                        "&7(Đặt cược 3x3 đổi mọi vật phẩm trong game).",
+                        "&7(Đặt cược 3x3 đổi mọi vật phẩm & bảo vật).",
                         "",
                         "&e▸ Chạm vào đây để chuyển chế độ!"
                 )
@@ -135,12 +143,14 @@ public class EquipmentUpgraderGui {
         if (eq != null && !eq.getType().isAir()) {
             int stars = eqManager.getTotalUpgradeStars(eq);
             Map<UpgradeAttribute, Integer> attrs = eqManager.getAllAttributes(eq);
+            Map<NativeEnchantment, Integer> runes = eqManager.getAllNativeEnchants(eq);
             ItemStack eqDisplay = new ItemBuilder(eq.clone())
                     .addLore(
                             "",
                             "&8▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
-                            "&7Cấp sao cường hóa: &e+" + stars + " ⭐",
-                            "&7Số dòng thuộc tính đã ép: &a" + attrs.size() + "&7/&6" + eqManager.getMaxCustomAttributes() + " dòng",
+                            "&7Cấp sao tổng: &e+" + stars + " ⭐",
+                            "&7Thuộc tính đã ép: &a" + attrs.size() + "&7/&6" + eqManager.getMaxCustomAttributes() + " dòng",
+                            "&7Cổ ngữ độc quyền: &d" + runes.size() + "&7/&5" + eqManager.getMaxNativeEnchants() + " dòng",
                             "&c▸ Chạm vào đây để lấy trang bị về lại túi đồ"
                     )
                     .build();
@@ -154,9 +164,7 @@ public class EquipmentUpgraderGui {
                             "&e▸ Cách đặt trang bị (PC & Điện thoại PE):",
                             "&f  Bạn chỉ cần &echạm 1 lần &fvào &bCuốc chim, Rìu,",
                             "&f  &bXẻng, Cuốc, Kiếm, Cung, Giáp, Cánh Elytra...",
-                            "&f  ở dưới túi đồ là món đồ tự động nhảy lên đây!",
-                            "",
-                            "&8(Hỗ trợ cả đồ Netherite full bùa & đồ MythicMobs)"
+                            "&f  ở dưới túi đồ là món đồ tự động nhảy lên đây!"
                     )
                     .build());
         }
@@ -184,7 +192,7 @@ public class EquipmentUpgraderGui {
                                 "",
                                 "&e▸ Cách nạp nguyên liệu:",
                                 "&f  Sau khi đã đặt Trang Bị ở ô trên, hãy chạm vào",
-                                "&f  &6Sắt, Vàng, Kim cương, Ngọc lục bảo, Netherite...",
+                                "&f  &6Sắt, Vàng, Kim cương, Đá Cường Hóa Tinh Anh...",
                                 "&f  trong túi đồ để đưa vào ô này!"
                         )
                         .build());
@@ -200,49 +208,69 @@ public class EquipmentUpgraderGui {
         // --- VÒNG QUAY TRUNG TÂM ---
         renderEquipmentWheel(session, inv, chance, requiredV, matV, pityBonus);
 
-        // --- 2 NÚT CHUYỂN TAB RIÊNG BIỆT, RÕ RÀNG (SLOT 15 & SLOT 16) ---
-        boolean enchantTab = session.isEnchantUpgradeTab();
+        // --- 3 NÚT CHUYỂN TAB ĐỘC LẬP, RÕ RÀNG (SLOTS 15, 16, 17) ---
+        UpgraderSession.UpgradeTab tab = session.getUpgradeTab();
 
-        // Slot 15: Tab 1 - Thuộc Tính Bổ Sung
+        // Slot 15: Tab 1 - Thuộc Tính Cường Hóa
+        boolean isAttrTab = tab == UpgraderSession.UpgradeTab.ATTRIBUTES;
         inv.setItem(ATTR_TAB_SLOT, new ItemBuilder(Material.NETHER_STAR)
-                .name((!enchantTab ? "&a&l✔ " : "&7") + "&6&lTAB 1: THUỘC TÍNH BỔ SUNG")
+                .name((isAttrTab ? "&a&l✔ " : "&7") + "&6&lTAB 1: THUỘC TÍNH CƯỜNG HÓA")
                 .lore(
-                        !enchantTab ? "&a(Đang mở bảng Thuộc Tính ở hàng dưới)" : "&e(Chạm để chuyển sang bảng Thuộc Tính)",
+                        isAttrTab ? "&a(Đang mở bảng Thuộc Tính ở hàng dưới)" : "&e(Chạm để chuyển sang bảng Thuộc Tính)",
                         "",
-                        "&7Ép thêm tối đa &6" + eqManager.getMaxCustomAttributes() + " dòng chỉ số đặc biệt &7lên đồ:",
+                        "&7Ép tối đa &6" + eqManager.getMaxCustomAttributes() + " dòng chỉ số gốc &7lên trang bị:",
                         "&f• &e⛏ Tốc Đánh & Đào Nhanh (+25% Tốc đào/cấp)",
                         "&f• &c⚔ Sát Thương &8| &d❤ Sinh Lực &8| &b🛡 Giáp",
                         "&f• &4🩸 Hút Máu &8| &6💥 Chí Mạng &8| &5🔥 Đam Chuẩn",
                         "",
-                        !enchantTab ? "&a▸ Bạn đang ở Tab này!" : "&e▸ Chạm vào đây để mở Tab Thuộc Tính!"
+                        isAttrTab ? "&a▸ Bạn đang ở Tab này!" : "&e▸ Chạm vào đây để mở Tab Thuộc Tính!"
                 )
-                .glow(!enchantTab)
+                .glow(isAttrTab)
                 .build());
 
-        // Slot 16: Tab 2 - Phù Phép (Hiệu Suất, Chậm Hỏng, Đào Nhanh, Gia Tài...)
+        // Slot 16: Tab 2 - Phù Phép Cơ Bản (Hiệu Suất, Chậm Hỏng, Đào Nhanh, Gia Tài...)
+        boolean isEnchantTab = tab == UpgraderSession.UpgradeTab.VANILLA_ENCHANTS;
         inv.setItem(ENCHANT_TAB_SLOT, new ItemBuilder(Material.ENCHANTED_BOOK)
-                .name((enchantTab ? "&a&l✔ " : "&7") + "&d&lTAB 2: PHÙ PHÉP (ENCHANT)")
+                .name((isEnchantTab ? "&a&l✔ " : "&7") + "&d&lTAB 2: PHÙ PHÉP (ENCHANT)")
                 .lore(
-                        enchantTab ? "&a(Đang mở bảng Phù Phép ở hàng dưới)" : "&e(Chạm để chuyển sang bảng Phù Phép)",
+                        isEnchantTab ? "&a(Đang mở bảng Phù Phép ở hàng dưới)" : "&e(Chạm để chuyển sang bảng Phù Phép)",
                         "",
-                        "&7Nâng cấp trực tiếp các dòng &dPhù Phép (Bùa)&7:",
+                        "&7Nâng cấp vượt giới hạn các dòng &dPhù Phép&7:",
                         "&f• &e⛏ Hiệu Suất (Đào Nhanh) &7- Đào đá & quặng siêu tốc",
                         "&f• &b🛡 Chậm Hỏng (Độ Bền) &7- Giảm hao mòn, lâu hư đồ",
                         "&f• &a💎 Gia Tài &8| &2💚 Sửa Chữa &8| &f✨ Chạm Nhẹ",
-                        "&f• &c⚔ Sắc Bén &8| &b🛡 Bảo Vệ &8| &d✦ ExcellentEnchants",
+                        "&f• &c⚔ Sắc Bén &8| &b🛡 Bảo Vệ &8| &3🌊 Đào Nhanh Dưới Nước",
                         "",
-                        enchantTab ? "&a▸ Bạn đang ở Tab này!" : "&e▸ Chạm vào đây để mở Tab Phù Phép!"
+                        isEnchantTab ? "&a▸ Bạn đang ở Tab này!" : "&e▸ Chạm vào đây để mở Tab Phù Phép!"
                 )
-                .glow(enchantTab)
+                .glow(isEnchantTab)
                 .build());
 
-        // Slot 24: Tẩy luyện thuộc tính
-        inv.setItem(RESET_ATTR_SLOT, new ItemBuilder(Material.GRINDSTONE)
-                .name("&c&l♻ Tẩy Luyện Thuộc Tính")
+        // Slot 17: Tab 3 - Cổ Ngữ Độc Quyền TN-Upgrader (Không cần plugin ngoài!)
+        boolean isRuneTab = tab == UpgraderSession.UpgradeTab.NATIVE_RUNES;
+        inv.setItem(RUNE_TAB_SLOT, new ItemBuilder(Material.ECHO_SHARD)
+                .name((isRuneTab ? "&a&l✔ " : "&7") + "&b&lTAB 3: CỔ NGỮ ĐỘC QUYỀN TN")
                 .lore(
-                        "&7Công dụng: Xóa các dòng thuộc tính bổ sung",
-                        "&7đã ép trên trang bị để bạn chọn lại từ đầu",
-                        "&7(Không làm mất Phù phép/Enchant trên đồ).",
+                        isRuneTab ? "&a(Đang mở bảng Cổ Ngữ Độc Quyền ở hàng dưới)" : "&e(Chạm để chuyển sang bảng Cổ Ngữ Độc Quyền)",
+                        "",
+                        "&7Hệ thống &b12 Kỹ Năng Nội Tại Độc Quyền &7của plugin:",
+                        "&f• &b⛏ Mũi Khoan Địa Tâm &7(Đào cả mạch quặng & chặt cây)",
+                        "&f• &e🔨 Búa Thần Khai Sơn &7(Đào rộng 3x3 khối đá/đất)",
+                        "&f• &6🔥 Lò Nung Tự Động &8| &d🧲 Từ Trường Hút Đồ Vào Túi",
+                        "&f• &e⚡ Lôi Phạt Sấm Sét &8| &b❄ Hàn Băng &8| &d💚 Tái Tạo Máu",
+                        "",
+                        isRuneTab ? "&a▸ Bạn đang ở Tab này!" : "&e▸ Chạm vào đây để mở Tab Cổ Ngữ Độc Quyền!"
+                )
+                .glow(isRuneTab)
+                .build());
+
+        // Slot 24: Tẩy luyện thuộc tính & cổ ngữ
+        inv.setItem(RESET_ATTR_SLOT, new ItemBuilder(Material.GRINDSTONE)
+                .name("&c&l♻ Tẩy Luyện Thuộc Tính & Cổ Ngữ")
+                .lore(
+                        "&7Công dụng: Xóa các dòng Thuộc Tính và Cổ Ngữ",
+                        "&7đã ép trên trang bị để bạn chọn lại bộ mới",
+                        "&7(Giữ nguyên các dòng Phù Phép/Enchant cơ bản).",
                         "",
                         "&e▸ Giữ Shift + Click chuột để tẩy luyện!"
                 )
@@ -254,7 +282,7 @@ public class EquipmentUpgraderGui {
         inv.setItem(PITY_INFO_SLOT, new ItemBuilder(Material.TOTEM_OF_UNDYING)
                 .name("&a&l🍀 Bảo Hiểm May Mắn: &e+" + TextUtil.formatPercent(pityBonus) + "%")
                 .lore(
-                        "&7Cơ chế bảo vệ người chơi:",
+                        "&7Cơ chế bảo vệ trang bị người chơi:",
                         "&f• Khi nâng cấp thất bại, trang bị của bạn",
                         "&f  &a&lGIỮ NGUYÊN 100% &f(không bị vỡ hay tụt cấp!).",
                         "&f• Đồng thời bạn được cộng thêm &e+" + TextUtil.formatPercent(addPity) + "%",
@@ -285,11 +313,11 @@ public class EquipmentUpgraderGui {
                 .glow(canUpgradeNow)
                 .build());
 
-        // --- HÀNG 5 (SLOTS 36..44): DANH SÁCH THUỘC TÍNH HOẶC PHÙ PHÉP ---
-        if (!enchantTab) {
-            renderAttributeRow(session, inv, eq, eqManager);
-        } else {
-            renderEnchantmentRow(session, inv, eq, eqManager, enchHook, bg);
+        // --- HÀNG 5 (SLOTS 36..44): HIỂN THỊ THEO TAB ĐANG CHỌN ---
+        switch (tab) {
+            case ATTRIBUTES -> renderAttributeRow(session, inv, eq, eqManager);
+            case VANILLA_ENCHANTS -> renderEnchantmentRow(session, inv, eq, eqManager, enchHook, bg);
+            case NATIVE_RUNES -> renderNativeRuneRow(session, inv, eq, eqManager, bg);
         }
 
         // --- HÀNG 6: ĐIỀU HƯỚNG ---
@@ -306,7 +334,7 @@ public class EquipmentUpgraderGui {
                         "&7Điểm nguyên liệu đã nạp: &6" + TextUtil.formatValue(matV) + " V",
                         "&7Điểm để đạt 100% tỉ lệ: &e" + TextUtil.formatValue(requiredV) + " V",
                         "",
-                        "&7(Nạp càng nhiều khoáng sản, tỉ lệ đậu càng cao!)"
+                        "&7(Nạp càng nhiều khoáng sản / Đá Cường Hóa, tỉ lệ càng cao!)"
                 )
                 .build());
 
@@ -368,7 +396,6 @@ public class EquipmentUpgraderGui {
 
     private void renderEnchantmentRow(UpgraderSession session, Inventory inv, ItemStack eq,
                                       EquipmentManager eqManager, ExcellentEnchantsHook enchHook, ItemStack bg) {
-        // Khi chưa đặt trang bị vào Ô 10: Hiển thị sẵn 9 Phù Phép tiêu biểu (Hiệu suất, Chậm hỏng, Đào nhanh, Gia tài...) kèm hướng dẫn rõ ràng!
         if (eq == null || eq.getType().isAir()) {
             for (int i = 0; i < 9; i++) {
                 int slot = 36 + i;
@@ -458,28 +485,128 @@ public class EquipmentUpgraderGui {
                     .build());
         }
 
-        // Nếu có nhiều hơn 9 phù phép (VD: cài thêm ExcellentEnchants), hiện nút chuyển trang ở Slot 45 & 46
         if (totalPages > 1) {
             inv.setItem(ENCHANT_PREV_PAGE_SLOT, new ItemBuilder(Material.SPECTRAL_ARROW)
-                    .name("&e‹ Trang Phù Phép Trước &7(" + (page + 1) + "/" + totalPages + ")")
+                    .name("&e‹ Trang Trước &7(" + (page + 1) + "/" + totalPages + ")")
                     .lore("&7Xem các phù phép trước đó.")
                     .build());
             inv.setItem(ENCHANT_NEXT_PAGE_SLOT, new ItemBuilder(Material.SPECTRAL_ARROW)
-                    .name("&eTrang Phù Phép Sau › &7(" + (page + 1) + "/" + totalPages + ")")
+                    .name("&eTrang Sau › &7(" + (page + 1) + "/" + totalPages + ")")
                     .lore("&7Xem thêm các phù phép khác (" + applicable.size() + " phù phép).")
                     .build());
         }
     }
 
+    /**
+     * Hiển thị Tab 3: Cổ Ngữ Độc Quyền của riêng TN-UpgraderItems (Đào mạch quặng, Đào 3x3, Lò nung tự động, Từ trường hút đồ...)
+     */
+    private void renderNativeRuneRow(UpgraderSession session, Inventory inv, ItemStack eq,
+                                     EquipmentManager eqManager, ItemStack bg) {
+        List<NativeEnchantment> listToShow = (eq == null || eq.getType().isAir())
+                ? Arrays.asList(NativeEnchantment.values())
+                : NativeEnchantment.getApplicable(eq);
+
+        if (listToShow.isEmpty()) {
+            for (int i = 0; i < 9; i++) {
+                inv.setItem(36 + i, bg);
+            }
+            return;
+        }
+
+        if (session.getSelectedNativeEnchant() == null || !listToShow.contains(session.getSelectedNativeEnchant())) {
+            session.setSelectedNativeEnchant(listToShow.get(0));
+        }
+
+        int perPage = 9;
+        int totalPages = Math.max(1, (int) Math.ceil((double) listToShow.size() / perPage));
+        if (session.getEnchantPage() >= totalPages) {
+            session.setEnchantPage(0);
+        }
+        int page = session.getEnchantPage();
+        int startIndex = page * perPage;
+
+        Map<NativeEnchantment, Integer> currentRunes = eq != null ? eqManager.getAllNativeEnchants(eq) : Map.of();
+        int maxRuneSlots = eqManager.getMaxNativeEnchants();
+
+        for (int i = 0; i < 9; i++) {
+            int slot = 36 + i;
+            int idx = startIndex + i;
+            if (idx >= listToShow.size()) {
+                inv.setItem(slot, bg);
+                continue;
+            }
+            NativeEnchantment rune = listToShow.get(idx);
+            int curLvl = currentRunes.getOrDefault(rune, 0);
+            int maxLvl = rune.getMaxLevel();
+            double cost = rune.getUpgradeCostV(curLvl + 1);
+            boolean isSel = rune == session.getSelectedNativeEnchant();
+            boolean slotFullLocked = (eq != null) && (curLvl == 0) && (currentRunes.size() >= maxRuneSlots);
+
+            if (eq == null || eq.getType().isAir()) {
+                inv.setItem(slot, new ItemBuilder(rune.getIcon())
+                        .name(rune.getDisplayName() + " &7(Tối đa Cấp " + maxLvl + ")")
+                        .lore(
+                                "&8[Cổ Ngữ Độc Quyền TN-Upgrader]",
+                                "&7Dành cho: &e" + rune.getTargetGroup().getLabel(),
+                                "&7Công dụng: &f" + rune.getDescription(),
+                                "&7Hiệu lực Cấp 1: &a" + rune.formatEffect(1),
+                                "&7Chi phí Cấp 1: &6" + TextUtil.formatValue(rune.getUpgradeCostV(1)) + " V",
+                                "",
+                                "&e&l👉 HƯỚNG DẪN ĐỂ KHẮC CỔ NGỮ:",
+                                "&f  Hãy chạm vào &bCông cụ, Vũ khí hoặc Giáp &fdưới túi đồ",
+                                "&f  để đặt vào &bÔ Trang Bị (Ô 10) &frồi chọn Cổ Ngữ này!"
+                        )
+                        .glow(true)
+                        .hideFlags()
+                        .build());
+            } else {
+                inv.setItem(slot, new ItemBuilder(slotFullLocked ? Material.BARRIER : rune.getIcon())
+                        .name(rune.getDisplayName() + " &f[Cấp " + curLvl + "/" + maxLvl + "]")
+                        .lore(
+                                "&8[Cổ Ngữ Độc Quyền TN-Upgrader]",
+                                "&7Công dụng: &f" + rune.getDescription(),
+                                "&7Khi lên Cấp " + (curLvl + 1) + ": &a" + rune.formatEffect(curLvl + 1),
+                                "",
+                                "&7Cấp hiện tại: &eCấp " + curLvl + " &8▸ &a&lNâng lên Cấp " + (curLvl + 1),
+                                "&7Điểm nguyên liệu cần (100%): &6" + TextUtil.formatValue(cost) + " V",
+                                "",
+                                curLvl >= maxLvl
+                                        ? "&6&l★ ĐÃ ĐẠT CẤP CỔ NGỮ TỐI ĐA!"
+                                        : (slotFullLocked
+                                        ? "&c✘ Đã đạt giới hạn " + maxRuneSlots + " dòng Cổ Ngữ trên 1 món đồ!"
+                                        : (isSel
+                                        ? "&a&l✔ ĐANG CHỌN CỔ NGỮ NÀY\n&e▸ Hãy nạp nguyên liệu rồi bấm Ô Vàng (Số 25) để đập!"
+                                        : "&e▸ Chạm vào đây để chọn khắc Cổ Ngữ này!"))
+                        )
+                        .glow(isSel)
+                        .hideFlags()
+                        .pdc(runeKeyTag, rune.name())
+                        .build());
+            }
+        }
+
+        if (totalPages > 1) {
+            inv.setItem(ENCHANT_PREV_PAGE_SLOT, new ItemBuilder(Material.SPECTRAL_ARROW)
+                    .name("&e‹ Trang Cổ Ngữ Trước &7(" + (page + 1) + "/" + totalPages + ")")
+                    .build());
+            inv.setItem(ENCHANT_NEXT_PAGE_SLOT, new ItemBuilder(Material.SPECTRAL_ARROW)
+                    .name("&eTrang Cổ Ngữ Sau › &7(" + (page + 1) + "/" + totalPages + ")")
+                    .build());
+        }
+    }
+
     private String getSelectedUpgradeDisplayName(UpgraderSession session) {
-        if (!session.isEnchantUpgradeTab()) {
-            return plugin.getEquipmentManager().getAttributeDisplayName(session.getSelectedAttribute());
-        }
-        Enchantment ench = session.getSelectedEnchantment();
-        if (ench == null) {
-            return "&7Chưa chọn Phù Phép";
-        }
-        return "&d" + plugin.getExcellentEnchantsHook().getEnchantDisplayName(ench);
+        return switch (session.getUpgradeTab()) {
+            case ATTRIBUTES -> plugin.getEquipmentManager().getAttributeDisplayName(session.getSelectedAttribute());
+            case VANILLA_ENCHANTS -> {
+                Enchantment ench = session.getSelectedEnchantment();
+                yield ench != null ? "&d" + plugin.getExcellentEnchantsHook().getEnchantDisplayName(ench) : "&7Chưa chọn Phù Phép";
+            }
+            case NATIVE_RUNES -> {
+                NativeEnchantment rune = session.getSelectedNativeEnchant();
+                yield rune != null ? rune.getDisplayName() : "&7Chưa chọn Cổ Ngữ";
+            }
+        };
     }
 
     private void renderEquipmentWheel(UpgraderSession session, Inventory inv, double chance,
@@ -518,16 +645,25 @@ public class EquipmentUpgraderGui {
         ItemStack eq = session.getEquipmentItem();
         if (eq == null || eq.getType().isAir()) return 500.0;
         EquipmentManager eqManager = plugin.getEquipmentManager();
-        if (!session.isEnchantUpgradeTab()) {
-            UpgradeAttribute attr = session.getSelectedAttribute();
-            int curLvl = eqManager.getAttributeLevel(eq, attr);
-            return eqManager.getAttributeUpgradeCostV(curLvl + 1);
-        } else {
-            Enchantment ench = session.getSelectedEnchantment();
-            if (ench == null) return 600.0;
-            int curLvl = eq.getItemMeta() != null ? eq.getItemMeta().getEnchantLevel(ench) : 0;
-            return eqManager.getEnchantUpgradeCostV(ench, curLvl + 1);
-        }
+        return switch (session.getUpgradeTab()) {
+            case ATTRIBUTES -> {
+                UpgradeAttribute attr = session.getSelectedAttribute();
+                int curLvl = eqManager.getAttributeLevel(eq, attr);
+                yield eqManager.getAttributeUpgradeCostV(curLvl + 1);
+            }
+            case VANILLA_ENCHANTS -> {
+                Enchantment ench = session.getSelectedEnchantment();
+                if (ench == null) yield 600.0;
+                int curLvl = eq.getItemMeta() != null ? eq.getItemMeta().getEnchantLevel(ench) : 0;
+                yield eqManager.getEnchantUpgradeCostV(ench, curLvl + 1);
+            }
+            case NATIVE_RUNES -> {
+                NativeEnchantment rune = session.getSelectedNativeEnchant();
+                if (rune == null) yield 800.0;
+                int curLvl = eqManager.getNativeEnchantLevel(eq, rune);
+                yield rune.getUpgradeCostV(curLvl + 1);
+            }
+        };
     }
 
     public boolean canExecuteUpgrade(UpgraderSession session) {
@@ -535,14 +671,16 @@ public class EquipmentUpgraderGui {
         if (eq == null || !plugin.getEquipmentManager().isUpgradableEquipment(eq)) {
             return false;
         }
-        if (!session.isEnchantUpgradeTab()) {
-            return plugin.getEquipmentManager().canUpgradeAttribute(eq, session.getSelectedAttribute());
-        } else {
-            Enchantment ench = session.getSelectedEnchantment();
-            if (ench == null) return false;
-            int curLvl = eq.getItemMeta() != null ? eq.getItemMeta().getEnchantLevel(ench) : 0;
-            return curLvl < plugin.getEquipmentManager().getMaxAllowedEnchantLevel(ench);
-        }
+        return switch (session.getUpgradeTab()) {
+            case ATTRIBUTES -> plugin.getEquipmentManager().canUpgradeAttribute(eq, session.getSelectedAttribute());
+            case VANILLA_ENCHANTS -> {
+                Enchantment ench = session.getSelectedEnchantment();
+                if (ench == null) yield false;
+                int curLvl = eq.getItemMeta() != null ? eq.getItemMeta().getEnchantLevel(ench) : 0;
+                yield curLvl < plugin.getEquipmentManager().getMaxAllowedEnchantLevel(ench);
+            }
+            case NATIVE_RUNES -> plugin.getEquipmentManager().canUpgradeNativeEnchant(eq, session.getSelectedNativeEnchant());
+        };
     }
 
     public double calculateUpgradeChance(UpgraderSession session, PlayerProfile profile) {
@@ -560,7 +698,7 @@ public class EquipmentUpgraderGui {
         PlayerProfile profile = plugin.getProfileManager().getProfile(player);
         if (!canExecuteUpgrade(session) || session.getTotalMaterialValue() <= 0.0) {
             player.sendMessage(TextUtil.color(plugin.getConfigManager().getPrefix()
-                    + "&cHướng dẫn: Hãy đặt Trang bị (Ô 10), nạp Khoáng sản/Nguyên liệu (Ô 19,20,28,29) và chọn dòng nâng cấp chưa đạt tối đa!"));
+                    + "&cHướng dẫn: Hãy đặt Trang bị (Ô 10), nạp Khoáng sản/Đá Cường Hóa (Ô 19,20,28,29) và chọn dòng nâng cấp hợp lệ!"));
             session.playSound(player, Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
             return;
         }
@@ -620,23 +758,36 @@ public class EquipmentUpgraderGui {
 
         if (win) {
             profile.setPityBonus(0.0);
-            if (!session.isEnchantUpgradeTab()) {
-                UpgradeAttribute attr = session.getSelectedAttribute();
-                plugin.getEquipmentManager().upgradeAttribute(eq, attr);
-                int newLvl = plugin.getEquipmentManager().getAttributeLevel(eq, attr);
-                player.sendMessage(TextUtil.color(plugin.getConfigManager().getPrefix()
-                        + "&a&lCƯỜNG HÓA THÀNH CÔNG! &fThuộc tính " + plugin.getEquipmentManager().getAttributeDisplayName(attr)
-                        + " &fđã tăng lên &eCấp " + newLvl + " &7(Tỉ lệ: &a" + TextUtil.formatPercent(chance) + "%&7)!"));
-            } else {
-                Enchantment ench = session.getSelectedEnchantment();
-                if (ench != null) {
-                    plugin.getEquipmentManager().upgradeEnchantment(eq, ench);
-                    int newLvl = eq.getItemMeta().getEnchantLevel(ench);
+            switch (session.getUpgradeTab()) {
+                case ATTRIBUTES -> {
+                    UpgradeAttribute attr = session.getSelectedAttribute();
+                    plugin.getEquipmentManager().upgradeAttribute(eq, attr);
+                    int newLvl = plugin.getEquipmentManager().getAttributeLevel(eq, attr);
                     player.sendMessage(TextUtil.color(plugin.getConfigManager().getPrefix()
-                            + "&a&lNÂNG CẤP PHÙ PHÉP THÀNH CÔNG! &d"
-                            + plugin.getExcellentEnchantsHook().getEnchantDisplayName(ench)
-                            + " &fđã đạt &eCấp " + newLvl + " &7("
-                            + plugin.getExcellentEnchantsHook().getEnchantEffectSummary(ench, newLvl) + ")&f!"));
+                            + "&a&lCƯỜNG HÓA THÀNH CÔNG! &fThuộc tính " + plugin.getEquipmentManager().getAttributeDisplayName(attr)
+                            + " &fđã tăng lên &eCấp " + newLvl + " &7(Tỉ lệ: &a" + TextUtil.formatPercent(chance) + "%&7)!"));
+                }
+                case VANILLA_ENCHANTS -> {
+                    Enchantment ench = session.getSelectedEnchantment();
+                    if (ench != null) {
+                        plugin.getEquipmentManager().upgradeEnchantment(eq, ench);
+                        int newLvl = eq.getItemMeta().getEnchantLevel(ench);
+                        player.sendMessage(TextUtil.color(plugin.getConfigManager().getPrefix()
+                                + "&a&lNÂNG CẤP PHÙ PHÉP THÀNH CÔNG! &d"
+                                + plugin.getExcellentEnchantsHook().getEnchantDisplayName(ench)
+                                + " &fđã đạt &eCấp " + newLvl + " &7("
+                                + plugin.getExcellentEnchantsHook().getEnchantEffectSummary(ench, newLvl) + ")&f!"));
+                    }
+                }
+                case NATIVE_RUNES -> {
+                    NativeEnchantment rune = session.getSelectedNativeEnchant();
+                    if (rune != null) {
+                        plugin.getEquipmentManager().upgradeNativeEnchant(eq, rune);
+                        int newLvl = plugin.getEquipmentManager().getNativeEnchantLevel(eq, rune);
+                        player.sendMessage(TextUtil.color(plugin.getConfigManager().getPrefix()
+                                + "&a&lKHẮC CỔ NGỮ ĐỘC QUYỀN THÀNH CÔNG! " + rune.getDisplayName()
+                                + " &fđã đạt &eCấp " + newLvl + " &7(" + rune.formatEffect(newLvl) + ")&f!"));
+                    }
                 }
             }
             session.playSound(player, Sound.BLOCK_SMITHING_TABLE_USE, 1.0f, 1.2f);

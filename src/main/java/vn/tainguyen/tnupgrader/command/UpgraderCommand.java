@@ -114,6 +114,48 @@ public class UpgraderCommand implements CommandExecutor, TabCompleter {
                 sender.sendMessage(TextUtil.color(prefix + "&aĐã trao &6Đài Nâng Cấp Tối Thượng x" + amount + " &acho &f" + target.getName()));
                 return true;
             }
+            case "stone" -> {
+                if (!sender.hasPermission("tnupgrader.admin")) {
+                    sender.sendMessage(TextUtil.color(prefix + "&cBạn không có quyền quản trị (tnupgrader.admin)!"));
+                    return true;
+                }
+                Player target = (args.length >= 2) ? Bukkit.getPlayer(args[1]) : (sender instanceof Player p ? p : null);
+                if (target == null) {
+                    sender.sendMessage(TextUtil.color(prefix + "&cKhông tìm thấy người chơi!"));
+                    return true;
+                }
+                int amount = 1;
+                if (args.length >= 3) {
+                    try {
+                        amount = Math.max(1, Integer.parseInt(args[2]));
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
+                UpgraderSession.giveItemSafely(target, plugin.getConfigManager().createUpgradeStoneItem(amount));
+                sender.sendMessage(TextUtil.color(prefix + "&aĐã trao &bĐá Cường Hóa Tinh Anh x" + amount + " &acho &f" + target.getName()));
+                return true;
+            }
+            case "crystal" -> {
+                if (!sender.hasPermission("tnupgrader.admin")) {
+                    sender.sendMessage(TextUtil.color(prefix + "&cBạn không có quyền quản trị (tnupgrader.admin)!"));
+                    return true;
+                }
+                Player target = (args.length >= 2) ? Bukkit.getPlayer(args[1]) : (sender instanceof Player p ? p : null);
+                if (target == null) {
+                    sender.sendMessage(TextUtil.color(prefix + "&cKhông tìm thấy người chơi!"));
+                    return true;
+                }
+                int amount = 1;
+                if (args.length >= 3) {
+                    try {
+                        amount = Math.max(1, Integer.parseInt(args[2]));
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
+                UpgraderSession.giveItemSafely(target, plugin.getConfigManager().createRuneCrystalItem(amount));
+                sender.sendMessage(TextUtil.color(prefix + "&aĐã trao &dTinh Thể Cổ Ngữ Thần Thoại x" + amount + " &acho &f" + target.getName()));
+                return true;
+            }
             case "setvalue" -> {
                 if (!sender.hasPermission("tnupgrader.admin") || !(sender instanceof Player player)) {
                     sender.sendMessage(TextUtil.color(prefix + "&cChỉ Admin trong game mới có thể dùng lệnh này!"));
@@ -160,6 +202,8 @@ public class UpgraderCommand implements CommandExecutor, TabCompleter {
                 if (sender.hasPermission("tnupgrader.admin")) {
                     sender.sendMessage(TextUtil.color(" &c▸ &f/" + label + " tool [tên] [số_lượng] &7- Nhận Sổ Tay Nâng Cấp Di Động"));
                     sender.sendMessage(TextUtil.color(" &c▸ &f/" + label + " block [tên] [số_lượng] &7- Nhận Khối Đài Nâng Cấp Tối Thượng"));
+                    sender.sendMessage(TextUtil.color(" &c▸ &f/" + label + " stone [tên] [số_lượng] &7- Nhận Đá Cường Hóa Tinh Anh (1,000 V)"));
+                    sender.sendMessage(TextUtil.color(" &c▸ &f/" + label + " crystal [tên] [số_lượng] &7- Nhận Tinh Thể Cổ Ngữ (3,000 V)"));
                     sender.sendMessage(TextUtil.color(" &c▸ &f/" + label + " setvalue <V> &7- Đặt giá trị V cho vật phẩm trên tay"));
                     sender.sendMessage(TextUtil.color(" &c▸ &f/" + label + " reload &7- Tải lại cấu hình plugin"));
                 }
@@ -174,13 +218,14 @@ public class UpgraderCommand implements CommandExecutor, TabCompleter {
         if (args.length == 1) {
             List<String> subs = new ArrayList<>(Arrays.asList("open", "equip", "stats", "help"));
             if (sender.hasPermission("tnupgrader.admin")) {
-                subs.addAll(Arrays.asList("tool", "block", "setvalue", "reload"));
+                subs.addAll(Arrays.asList("tool", "block", "stone", "crystal", "setvalue", "reload"));
             }
             String input = args[0].toLowerCase(Locale.ROOT);
             subs.removeIf(s -> !s.startsWith(input));
             return subs;
         }
-        if (args.length == 2 && (args[0].equalsIgnoreCase("tool") || args[0].equalsIgnoreCase("block"))) {
+        if (args.length == 2 && (args[0].equalsIgnoreCase("tool") || args[0].equalsIgnoreCase("block")
+                || args[0].equalsIgnoreCase("stone") || args[0].equalsIgnoreCase("crystal"))) {
             return null; // Danh sách người chơi online
         }
         return Collections.emptyList();
