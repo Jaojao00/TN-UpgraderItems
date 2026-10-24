@@ -1,0 +1,32 @@
+name: TN-UpgraderItems
+version: '${project.version}'
+main: vn.tainguyen.tnupgrader.TNUpgraderPlugin
+api-version: '1.21'
+authors: [ Tài Nguyễn ]
+description: Hệ thống Nâng Cấp Vật Phẩm (Đấu Giá May Rủi) & Cường Hóa Trang Bị End-Game độc quyền cho Paper 1.21+
+website: https://github.com/tainguyen
+softdepend:
+  - MythicMobs
+  - ExcellentEnchants
+  - floodgate
+  - Geyser-Spigot
+
+commands:
+  upgrader:
+    description: Mở giao diện Nâng Cấp Vật Phẩm hoặc quản lý TN-UpgraderItems
+    aliases: [ tnupgrader, nangcap, nc, upgradeitems ]
+    usage: /<command> [open|equip|tool|block|stats|setvalue|reload]
+
+permissions:
+  tnupgrader.use:
+    description: Cho phép người chơi sử dụng hệ thống Nâng Cấp Vật Phẩm & Cường Hóa Trang Bị
+    default: true
+  tnupgrader.command.open:
+    description: Cho phép mở menu nâng cấp từ xa bằng lệnh /nangcap
+    default: true
+  tnupgrader.admin:
+    description: Quyền quản trị viên TN-UpgraderItems (reload, give tool/block, setvalue)
+    default: op
+    children:
+      tnupgrader.use: true
+      tnupgrader.command.open: true
