@@ -47,7 +47,8 @@ public class EquipmentManager {
                 || name.endsWith("_CHESTPLATE") || name.endsWith("_LEGGINGS") || name.endsWith("_BOOTS")
                 || mat == Material.BOW || mat == Material.CROSSBOW || mat == Material.TRIDENT
                 || mat == Material.MACE || mat == Material.SHIELD || mat == Material.ELYTRA
-                || mat == Material.TURTLE_HELMET || mat.getMaxDurability() > 0;
+                || mat == Material.TURTLE_HELMET || mat == Material.SHEARS
+                || mat == Material.FISHING_ROD || mat.getMaxDurability() > 0;
     }
 
     private NamespacedKey getAttrKey(UpgradeAttribute attr) {
@@ -212,6 +213,15 @@ public class EquipmentManager {
                 }
             }
         }
+        Attribute breakSpeedAttr = UpgradeAttribute.resolveBlockBreakSpeedAttribute();
+        if (breakSpeedAttr != null && meta.getAttributeModifiers(breakSpeedAttr) != null) {
+            NamespacedKey digKey = new NamespacedKey(plugin, "mod_mining_speed");
+            for (AttributeModifier mod : new ArrayList<>(meta.getAttributeModifiers(breakSpeedAttr))) {
+                if (mod.getKey().equals(digKey)) {
+                    meta.removeAttributeModifier(breakSpeedAttr, mod);
+                }
+            }
+        }
         item.setItemMeta(meta);
         applyBukkitAttributesAndLore(item);
     }
@@ -257,7 +267,6 @@ public class EquipmentManager {
             if (lvl > 0) {
                 double bonus = getAttributePerLevel(attr) * lvl;
                 if (attr == UpgradeAttribute.MOVEMENT_SPEED) {
-                    // Đổi từ % hiển thị (VD: 4%) sang tốc chạy thực tế của Minecraft
                     bonus = (getAttributePerLevel(attr) * 0.0022) * lvl;
                 }
                 AttributeModifier modifier = new AttributeModifier(
@@ -267,6 +276,29 @@ public class EquipmentManager {
                         slotGroup
                 );
                 meta.addAttributeModifier(bukkitAttr, modifier);
+            }
+        }
+
+        // Tăng tốc độ đào khối thực tế (player.block_break_speed 1.21+) khi nâng cấp Tốc Đánh & Đào Nhanh
+        Attribute breakSpeedAttr = UpgradeAttribute.resolveBlockBreakSpeedAttribute();
+        if (breakSpeedAttr != null) {
+            NamespacedKey digKey = new NamespacedKey(plugin, "mod_mining_speed");
+            if (meta.getAttributeModifiers(breakSpeedAttr) != null) {
+                for (AttributeModifier existing : new ArrayList<>(meta.getAttributeModifiers(breakSpeedAttr))) {
+                    if (existing.getKey().equals(digKey)) {
+                        meta.removeAttributeModifier(breakSpeedAttr, existing);
+                    }
+                }
+            }
+            int speedLvl = attrs.getOrDefault(UpgradeAttribute.ATTACK_SPEED, 0);
+            if (speedLvl > 0) {
+                AttributeModifier digMod = new AttributeModifier(
+                        digKey,
+                        0.25 * speedLvl,
+                        AttributeModifier.Operation.ADD_NUMBER,
+                        slotGroup
+                );
+                meta.addAttributeModifier(breakSpeedAttr, digMod);
             }
         }
 
@@ -281,7 +313,6 @@ public class EquipmentManager {
                 }
                 cleanLore.add(line);
             }
-            // Xóa dòng trống thừa ở cuối trước khi nối khối Cường Hóa
             while (!cleanLore.isEmpty() && PlainTextComponentSerializer.plainText().serialize(cleanLore.get(cleanLore.size() - 1)).isBlank()) {
                 cleanLore.remove(cleanLore.size() - 1);
             }
@@ -291,13 +322,16 @@ public class EquipmentManager {
         if (totalStars > 0) {
             cleanLore.add(Component.empty());
             cleanLore.add(TextUtil.color("&6&l" + LORE_HEADER_PLAIN + " [+" + totalStars + " ⭐] ✦ ==="));
-            cleanLore.add(TextUtil.color("&7Số dòng thuộc tính: &e" + attrs.size() + "&7/&6" + getMaxCustomAttributes()));
+            cleanLore.add(TextUtil.color("&7Thuộc tính bổ sung: &e" + attrs.size() + "&7/&6" + getMaxCustomAttributes() + " dòng"));
             for (Map.Entry<UpgradeAttribute, Integer> entry : attrs.entrySet()) {
                 UpgradeAttribute attr = entry.getKey();
                 int lvl = entry.getValue();
                 double totalVal = getAttributePerLevel(attr) * lvl;
+                String extraInfo = (attr == UpgradeAttribute.ATTACK_SPEED)
+                        ? " &7(&a+" + (lvl * 25) + "% Đào nhanh&7)"
+                        : "";
                 cleanLore.add(TextUtil.color(" &8▸ " + getAttributeDisplayName(attr)
-                        + " &f(Cấp " + lvl + "): &a+" + TextUtil.formatValue(totalVal) + getAttributeUnit(attr)));
+                        + " &f(Cấp " + lvl + "): &a+" + TextUtil.formatValue(totalVal) + getAttributeUnit(attr) + extraInfo));
             }
         }
 

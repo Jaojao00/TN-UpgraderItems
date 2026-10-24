@@ -116,11 +116,11 @@ equipment-upgrader:
       description: "Chống xuyên giáp từ các đòn đánh hạng nặng"
     ATTACK_SPEED:
       enabled: true
-      name: "&e⚡ Tốc Độ Xuất Chiêu"
-      per-level: 0.12
-      unit: " Tốc đánh"
-      icon: GOLDEN_SWORD
-      description: "Tăng tốc độ hồi đòn đánh vũ khí và công cụ"
+      name: "&e⛏ Tốc Đánh & Đào Nhanh"
+      per-level: 0.15
+      unit: " Tốc độ"
+      icon: GOLDEN_PICKAXE
+      description: "Tăng tốc độ vung vũ khí VÀ tăng +25% tốc độ đào khối mỗi cấp"
     MOVEMENT_SPEED:
       enabled: true
       name: "&a👟 Tốc Độ Di Chuyển"

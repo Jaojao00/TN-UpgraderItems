@@ -168,10 +168,7 @@ public class ConfigManager {
 
     private boolean isFeaturedVanillaEnchant(Enchantment enchant) {
         String key = enchant.getKey().getKey().toLowerCase(Locale.ROOT);
-        return key.equals("sharpness") || key.equals("protection") || key.equals("efficiency")
-                || key.equals("fortune") || key.equals("mending") || key.equals("unbreaking")
-                || key.equals("looting") || key.equals("power") || key.equals("density")
-                || key.equals("breach") || key.equals("wind_burst");
+        return !key.contains("curse");
     }
 
     public CollectionView<RewardItem> getAllRewards() {

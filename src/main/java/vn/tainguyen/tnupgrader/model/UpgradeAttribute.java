@@ -12,16 +12,16 @@ public enum UpgradeAttribute {
             1.5,
             " Sát thương",
             Material.NETHERITE_SWORD,
-            "Tăng sát thương cận chiến trực tiếp",
+            "Tăng trực tiếp sát thương khi đánh quái, Boss và người chơi",
             "generic.attack_damage",
             "attack_damage"
     ),
     MAX_HEALTH(
-            "&d❤ Sinh Lực Tối Đa",
+            "&d❤ Sinh Lực Tối Đa (Máu)",
             2.0,
-            " Máu",
+            " Máu (1 Tim)",
             Material.GOLDEN_APPLE,
-            "Tăng giới hạn máu tối đa cho nhân vật",
+            "Tăng giới hạn máu tối đa cho nhân vật khi cầm hoặc mặc đồ",
             "generic.max_health",
             "max_health"
     ),
@@ -30,34 +30,34 @@ public enum UpgradeAttribute {
             1.5,
             " Giáp",
             Material.DIAMOND_CHESTPLATE,
-            "Tăng chỉ số giáp giảm sát thương vật lý",
+            "Tăng chỉ số giáp giúp giảm mạnh sát thương vật lý nhận vào",
             "generic.armor",
             "armor"
     ),
     ARMOR_TOUGHNESS(
-            "&3💎 Độ Cứng Giáp",
+            "&3💎 Độ Cứng Giáp (Chống Xuyên Giáp)",
             1.0,
             " Độ cứng",
             Material.NETHERITE_CHESTPLATE,
-            "Chống xuyên giáp từ đòn đánh hạng nặng",
+            "Giúp giáp bền vững trước các đòn đánh hạng nặng của Boss",
             "generic.armor_toughness",
             "armor_toughness"
     ),
     ATTACK_SPEED(
-            "&e⚡ Tốc Độ Xuất Chiêu",
-            0.12,
-            " Tốc đánh",
-            Material.GOLDEN_SWORD,
-            "Tăng tốc độ vung vũ khí và công cụ",
+            "&e⛏ Tốc Đánh & Đào Nhanh",
+            0.15,
+            " Tốc độ",
+            Material.GOLDEN_PICKAXE,
+            "Tăng tốc độ vung vũ khí VÀ tăng +25% tốc độ đào khối mỗi cấp",
             "generic.attack_speed",
             "attack_speed"
     ),
     MOVEMENT_SPEED(
             "&a👟 Tốc Độ Di Chuyển",
-            0.008,
-            " Tốc chạy",
+            4.0,
+            "% Tốc chạy",
             Material.FEATHER,
-            "Giúp di chuyển linh hoạt hơn trong giao tranh",
+            "Giúp nhân vật chạy nhanh và linh hoạt hơn trong chiến đấu",
             "generic.movement_speed",
             "movement_speed"
     ),
@@ -66,16 +66,16 @@ public enum UpgradeAttribute {
             2.5,
             "% Hút máu",
             Material.REDSTONE,
-            "Hồi máu theo % sát thương gây ra cho mục tiêu",
+            "Tự động hồi máu cho bản thân theo % sát thương gây ra",
             null,
             null
     ),
     CRIT_STRIKE(
-            "&6💥 Bạo Kích Huỷ Diệt",
+            "&6💥 Bạo Kích Huỷ Diệt (Chí Mạng)",
             4.0,
-            "% Chí mạng (x1.5 DMG)",
+            "% Chí mạng (x1.5 Đam)",
             Material.BLAZE_POWDER,
-            "Xác suất nổ đòn chí mạng x1.5 sát thương",
+            "Tỉ lệ nổ đòn chí mạng gây gấp 1.5 lần sát thương kèm hiệu ứng",
             null,
             null
     ),
@@ -84,7 +84,7 @@ public enum UpgradeAttribute {
             1.0,
             " Sát thương chuẩn",
             Material.NETHER_STAR,
-            "Gây sát thương xuyên giáp đối phương & Boss MythicMobs",
+            "Gây sát thương trừ thẳng vào máu, bỏ qua mọi loại giáp đối phương",
             null,
             null
     );
@@ -140,6 +140,14 @@ public enum UpgradeAttribute {
         Attribute attr = Registry.ATTRIBUTE.get(NamespacedKey.minecraft(legacyAttributeKey));
         if (attr == null && modernAttributeKey != null) {
             attr = Registry.ATTRIBUTE.get(NamespacedKey.minecraft(modernAttributeKey));
+        }
+        return attr;
+    }
+
+    public static Attribute resolveBlockBreakSpeedAttribute() {
+        Attribute attr = Registry.ATTRIBUTE.get(NamespacedKey.minecraft("player.block_break_speed"));
+        if (attr == null) {
+            attr = Registry.ATTRIBUTE.get(NamespacedKey.minecraft("block_break_speed"));
         }
         return attr;
     }

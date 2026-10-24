@@ -437,10 +437,34 @@ public class GuiListener implements Listener {
                 plugin.getMainUpgraderGui().open(player, session);
             }
             case 8 -> player.closeInventory();
-            case EquipmentUpgraderGui.TAB_SWITCH_SLOT -> {
-                session.setEnchantUpgradeTab(!session.isEnchantUpgradeTab());
+            case EquipmentUpgraderGui.ATTR_TAB_SLOT -> {
+                session.setEnchantUpgradeTab(false);
                 session.playSound(player, Sound.UI_BUTTON_CLICK, 0.8f, 1.3f);
                 plugin.getEquipmentUpgraderGui().render(player, session, session.getActiveInventory());
+            }
+            case EquipmentUpgraderGui.ENCHANT_TAB_SLOT -> {
+                session.setEnchantUpgradeTab(true);
+                session.setEnchantPage(0);
+                session.playSound(player, Sound.UI_BUTTON_CLICK, 0.8f, 1.3f);
+                plugin.getEquipmentUpgraderGui().render(player, session, session.getActiveInventory());
+            }
+            case EquipmentUpgraderGui.ENCHANT_PREV_PAGE_SLOT -> {
+                if (session.isEnchantUpgradeTab() && session.getEnchantPage() > 0) {
+                    session.setEnchantPage(session.getEnchantPage() - 1);
+                    session.playSound(player, Sound.ITEM_BOOK_PAGE_TURN, 1.0f, 1.0f);
+                    plugin.getEquipmentUpgraderGui().render(player, session, session.getActiveInventory());
+                }
+            }
+            case EquipmentUpgraderGui.ENCHANT_NEXT_PAGE_SLOT -> {
+                if (session.isEnchantUpgradeTab() && session.getEquipmentItem() != null) {
+                    int total = plugin.getExcellentEnchantsHook().getApplicableEnchantments(session.getEquipmentItem()).size();
+                    int maxPages = Math.max(1, (int) Math.ceil(total / 9.0));
+                    if (session.getEnchantPage() + 1 < maxPages) {
+                        session.setEnchantPage(session.getEnchantPage() + 1);
+                        session.playSound(player, Sound.ITEM_BOOK_PAGE_TURN, 1.0f, 1.2f);
+                        plugin.getEquipmentUpgraderGui().render(player, session, session.getActiveInventory());
+                    }
+                }
             }
             case EquipmentUpgraderGui.RESET_ATTR_SLOT -> {
                 if (event.isShiftClick() && session.getEquipmentItem() != null) {

@@ -70,6 +70,7 @@ public class UpgraderSession {
     private UpgradeAttribute selectedAttribute = UpgradeAttribute.ATTACK_DAMAGE;
     private Enchantment selectedEnchantment = null;
     private boolean enchantUpgradeTab = false;
+    private int enchantPage = 0;
 
     public UpgraderSession(TNUpgraderPlugin plugin, UUID playerUuid) {
         this.plugin = plugin;
@@ -423,6 +424,14 @@ public class UpgraderSession {
 
     public void setEnchantUpgradeTab(boolean enchantUpgradeTab) {
         this.enchantUpgradeTab = enchantUpgradeTab;
+    }
+
+    public int getEnchantPage() {
+        return enchantPage;
+    }
+
+    public void setEnchantPage(int enchantPage) {
+        this.enchantPage = Math.max(0, enchantPage);
     }
 
     public void playSound(Player player, Sound sound, float volume, float pitch) {
