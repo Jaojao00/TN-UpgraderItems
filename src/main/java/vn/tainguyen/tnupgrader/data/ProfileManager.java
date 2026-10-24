@@ -75,6 +75,8 @@ public class ProfileManager {
                 profile.setTotalWageredValue(pSec.getDouble("total-wagered", 0.0));
                 profile.setTotalWonValue(pSec.getDouble("total-won", 0.0));
                 profile.setPityBonus(pSec.getDouble("pity-bonus", 0.0));
+                profile.setLastResetEpochDay(pSec.getLong("last-reset-day", java.time.LocalDate.now().toEpochDay()));
+                profile.setDailyAttemptsUsed(pSec.getInt("daily-attempts-used", 0));
                 List<String> favs = pSec.getStringList("favorites");
                 profile.getFavoriteItemIds().addAll(favs);
                 profiles.put(uuid, profile);
@@ -102,6 +104,8 @@ public class ProfileManager {
             config.set(path + ".total-wagered", profile.getTotalWageredValue());
             config.set(path + ".total-won", profile.getTotalWonValue());
             config.set(path + ".pity-bonus", profile.getPityBonus());
+            config.set(path + ".daily-attempts-used", profile.getDailyAttemptsUsed());
+            config.set(path + ".last-reset-day", profile.getLastResetEpochDay());
             config.set(path + ".favorites", new ArrayList<>(profile.getFavoriteItemIds()));
         }
         try {

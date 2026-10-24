@@ -47,6 +47,17 @@ public class ConfigManager {
     private double broadcastMaxChance;
     private boolean peOneTapMode;
 
+    // --- Cấu hình Chống Lợi Dụng Cày Đồ (Anti-Abuse) ---
+    private int maxWagerItems;
+    private int maxTargetQuantity;
+    private int maxUpgradeMultiplier;
+    private double minUnitValueRatio;
+    private int dailyWagerLimit;
+    private int cooldownSeconds;
+    private boolean requireTierPermissions;
+    private double epicTierMinValue;
+    private double legendaryTierMinValue;
+
     public ConfigManager(TNUpgraderPlugin plugin) {
         this.plugin = plugin;
         this.specialItemKey = new NamespacedKey(plugin, "special_type");
@@ -60,11 +71,21 @@ public class ConfigManager {
 
         this.prefix = plugin.getConfig().getString("settings.prefix", "&8[&6&lTN-Upgrader&8] &r");
         this.requireBlockOrTool = plugin.getConfig().getBoolean("settings.require-block-or-tool", false);
-        this.maxSuccessChance = plugin.getConfig().getDouble("settings.max-success-chance", 100.0);
-        this.chanceMultiplier = plugin.getConfig().getDouble("settings.chance-multiplier", 1.0);
+        this.maxSuccessChance = plugin.getConfig().getDouble("settings.max-success-chance", 75.0);
+        this.chanceMultiplier = plugin.getConfig().getDouble("settings.chance-multiplier", 0.80);
         this.broadcastMinValue = plugin.getConfig().getDouble("settings.broadcast-min-value", 4000.0);
         this.broadcastMaxChance = plugin.getConfig().getDouble("settings.broadcast-max-chance", 35.0);
         this.peOneTapMode = plugin.getConfig().getBoolean("settings.pe-one-tap-mode", true);
+
+        this.maxWagerItems = Math.max(1, plugin.getConfig().getInt("anti-abuse.max-wager-items", 64));
+        this.maxTargetQuantity = Math.max(1, plugin.getConfig().getInt("anti-abuse.max-target-quantity", 3));
+        this.maxUpgradeMultiplier = Math.max(1, plugin.getConfig().getInt("anti-abuse.max-upgrade-multiplier", 5));
+        this.minUnitValueRatio = Math.max(0.0, plugin.getConfig().getDouble("anti-abuse.min-unit-value-ratio", 0.15));
+        this.dailyWagerLimit = Math.max(1, plugin.getConfig().getInt("anti-abuse.daily-wager-limit", 15));
+        this.cooldownSeconds = Math.max(0, plugin.getConfig().getInt("anti-abuse.cooldown-seconds", 8));
+        this.requireTierPermissions = plugin.getConfig().getBoolean("anti-abuse.require-tier-permissions", true);
+        this.epicTierMinValue = plugin.getConfig().getDouble("anti-abuse.epic-tier-min-value", 1500.0);
+        this.legendaryTierMinValue = plugin.getConfig().getDouble("anti-abuse.legendary-tier-min-value", 10000.0);
 
         loadItemValues();
         buildRewardCatalog();
@@ -605,6 +626,96 @@ public class ConfigManager {
 
     public boolean isPeOneTapMode() {
         return peOneTapMode;
+    }
+
+    public int getMaxWagerItems() {
+        return maxWagerItems;
+    }
+
+    public int getMaxTargetQuantity() {
+        return maxTargetQuantity;
+    }
+
+    public int getMaxUpgradeMultiplier() {
+        return maxUpgradeMultiplier;
+    }
+
+    public double getMinUnitValueRatio() {
+        return minUnitValueRatio;
+    }
+
+    public int getDailyWagerLimit() {
+        return dailyWagerLimit;
+    }
+
+    public int getCooldownSeconds() {
+        return cooldownSeconds;
+    }
+
+    public boolean isRequireTierPermissions() {
+        return requireTierPermissions;
+    }
+
+    public double getEpicTierMinValue() {
+        return epicTierMinValue;
+    }
+
+    public double getLegendaryTierMinValue() {
+        return legendaryTierMinValue;
+    }
+
+    public double getPlayerMaxSuccessChance(Player player) {
+        if (player != null) {
+            if (player.hasPermission("tnupgrader.bypass.chance") || player.hasPermission("tnupgrader.admin")) {
+                return 100.0;
+            }
+            if (player.hasPermission("tnupgrader.maxchance.85")) {
+                return Math.max(maxSuccessChance, 85.0);
+            }
+        }
+        return maxSuccessChance;
+    }
+
+    public int getPlayerDailyLimit(Player player) {
+        if (player != null) {
+            if (player.hasPermission("tnupgrader.bypass.limit") || player.hasPermission("tnupgrader.admin")) {
+                return 999999;
+            }
+            if (player.hasPermission("tnupgrader.limit.50")) {
+                return Math.max(dailyWagerLimit, 50);
+            }
+            if (player.hasPermission("tnupgrader.limit.30")) {
+                return Math.max(dailyWagerLimit, 30);
+            }
+        }
+        return dailyWagerLimit;
+    }
+
+    public boolean canPlayerSelectRewardTier(Player player, RewardItem item) {
+        if (!requireTierPermissions || player == null || item == null) {
+            return true;
+        }
+        if (player.hasPermission("tnupgrader.admin")) {
+            return true;
+        }
+        if (item.getUnitValue() >= legendaryTierMinValue) {
+            return player.hasPermission("tnupgrader.tier.legendary");
+        }
+        if (item.getUnitValue() >= epicTierMinValue) {
+            return player.hasPermission("tnupgrader.tier.epic") || player.hasPermission("tnupgrader.tier.legendary");
+        }
+        return true;
+    }
+
+    public String getRequiredTierPermissionLabel(RewardItem item) {
+        if (item == null) return "";
+        if (item.getUnitValue() >= legendaryTierMinValue) {
+            return "&6&lBậc Thần Thoại &8(&ftnupgrader.tier.legendary&8)";
+        }
+        if (item.getUnitValue() >= epicTierMinValue) {
+            return "&d&lBậc Cao Cấp &8(&ftnupgrader.tier.epic&8)";
+        }
+        return "&aBậc Phổ Thông";
     }
 
     public static class CollectionView<T> {

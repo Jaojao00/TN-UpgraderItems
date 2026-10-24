@@ -152,30 +152,55 @@ public class UpgraderSession {
         return total;
     }
 
+    public double getLowestWagerUnitValue() {
+        double minVal = Double.MAX_VALUE;
+        for (ItemStack item : wagerItems) {
+            if (item != null && !item.getType().isAir()) {
+                double unitV = plugin.getConfigManager().getUnitValue(item);
+                if (unitV > 0 && unitV < minVal) {
+                    minVal = unitV;
+                }
+            }
+        }
+        return minVal == Double.MAX_VALUE ? 0.0 : minVal;
+    }
+
     public boolean addWagerItem(ItemStack toAdd) {
         if (toAdd == null || toAdd.getType().isAir()) return false;
+        int maxAllowed = plugin.getConfigManager().getMaxWagerItems();
+        int remainingCap = maxAllowed - getTotalWagerItemCount();
+        if (remainingCap <= 0) {
+            return false;
+        }
+
+        boolean movedAny = false;
         // Gộp vào ô cùng loại trước nếu còn chỗ
-        for (int i = 0; i < wagerItems.length; i++) {
+        for (int i = 0; i < wagerItems.length && remainingCap > 0 && toAdd.getAmount() > 0; i++) {
             ItemStack existing = wagerItems[i];
             if (existing != null && existing.isSimilar(toAdd) && existing.getAmount() < existing.getMaxStackSize()) {
                 int canAdd = existing.getMaxStackSize() - existing.getAmount();
-                int move = Math.min(canAdd, toAdd.getAmount());
-                existing.setAmount(existing.getAmount() + move);
-                toAdd.setAmount(toAdd.getAmount() - move);
-                if (toAdd.getAmount() <= 0) {
-                    return true;
+                int move = Math.min(Math.min(canAdd, toAdd.getAmount()), remainingCap);
+                if (move > 0) {
+                    existing.setAmount(existing.getAmount() + move);
+                    toAdd.setAmount(toAdd.getAmount() - move);
+                    remainingCap -= move;
+                    movedAny = true;
                 }
             }
         }
         // Đặt vào ô trống
-        for (int i = 0; i < wagerItems.length; i++) {
+        for (int i = 0; i < wagerItems.length && remainingCap > 0 && toAdd.getAmount() > 0; i++) {
             if (wagerItems[i] == null || wagerItems[i].getType().isAir()) {
-                wagerItems[i] = toAdd.clone();
-                toAdd.setAmount(0);
-                return true;
+                int move = Math.min(toAdd.getAmount(), remainingCap);
+                ItemStack placed = toAdd.clone();
+                placed.setAmount(move);
+                wagerItems[i] = placed;
+                toAdd.setAmount(toAdd.getAmount() - move);
+                remainingCap -= move;
+                movedAny = true;
             }
         }
-        return false;
+        return movedAny;
     }
 
     public void clearWagerWithoutReturn() {
@@ -306,7 +331,8 @@ public class UpgraderSession {
     }
 
     public void setTargetQuantity(int targetQuantity) {
-        this.targetQuantity = Math.max(1, Math.min(6400, targetQuantity));
+        int maxQty = plugin.getConfigManager().getMaxTargetQuantity();
+        this.targetQuantity = Math.max(1, Math.min(maxQty, targetQuantity));
     }
 
     public int getSelectedMultiplier() {
@@ -320,11 +346,12 @@ public class UpgraderSession {
     public double getCurrentSuccessChance() {
         if (targetReward == null) return 0.0;
         double wager = getTotalWagerValue();
+        double maxChance = plugin.getConfigManager().getPlayerMaxSuccessChance(getPlayer());
         return targetReward.calculateChance(
                 wager,
                 targetQuantity,
                 plugin.getConfigManager().getChanceMultiplier(),
-                plugin.getConfigManager().getMaxSuccessChance()
+                maxChance
         );
     }
 
@@ -481,14 +508,15 @@ public class UpgraderSession {
         }
 
         double mult = plugin.getConfigManager().getChanceMultiplier();
-        double maxChance = plugin.getConfigManager().getMaxSuccessChance();
+        double maxChance = plugin.getConfigManager().getPlayerMaxSuccessChance(getPlayer());
+        int maxQty = plugin.getConfigManager().getMaxTargetQuantity();
 
         filtered.sort((a, b) -> switch (sortOrder) {
             case PRICE_ASC -> Double.compare(a.getUnitValue(), b.getUnitValue());
             case PRICE_DESC -> Double.compare(b.getUnitValue(), a.getUnitValue());
             case CHANCE_DESC -> {
-                int qa = a.getSuggestedQuantity(wager);
-                int qb = b.getSuggestedQuantity(wager);
+                int qa = Math.min(maxQty, a.getSuggestedQuantity(wager));
+                int qb = Math.min(maxQty, b.getSuggestedQuantity(wager));
                 double ca = a.calculateChance(wager, qa, mult, maxChance);
                 double cb = b.calculateChance(wager, qb, mult, maxChance);
                 yield Double.compare(cb, ca);

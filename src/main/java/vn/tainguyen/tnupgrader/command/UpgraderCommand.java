@@ -59,6 +59,10 @@ public class UpgraderCommand implements CommandExecutor, TabCompleter {
                     sender.sendMessage(TextUtil.color(prefix + "&cChỉ người chơi mới có thể sử dụng lệnh này!"));
                     return true;
                 }
+                if (!player.hasPermission("tnupgrader.mode.equipment") && !player.hasPermission("tnupgrader.admin")) {
+                    player.sendMessage(TextUtil.color(prefix + "&cBạn không có quyền sử dụng Bàn Cường Hóa Trang Bị (tnupgrader.mode.equipment)!"));
+                    return true;
+                }
                 UpgraderSession session = plugin.getOrCreateSession(player);
                 plugin.getEquipmentUpgraderGui().open(player, session);
                 return true;

@@ -1,22 +1,57 @@
 # ==============================================================================
 #                        TN-UPGRADER ITEMS (PAPER 1.21+)
 #                      Tác giả (Author): Tài Nguyễn
-#   Hệ thống Đấu Giá Nâng Đời Vật Phẩm & Cường Hóa Trang Bị End-Game Độc Đáo
+#   Hệ thống Đấu Giá Nâng Đời Vật Phẩm & Cường Hóa Trang Bị Cổ Ngữ Độc Quyền
 # ==============================================================================
 
 settings:
   prefix: "&8[&6&lTN-Upgrader&8] &r"
-  # Cho phép mở trực tiếp bằng lệnh /nangcap hoặc bắt buộc dùng Khối/Công cụ Nâng Cấp
+  # Bắt buộc đứng gần Đài Nâng Cấp hoặc cầm Sổ Tay Nâng Cấp mới mở được bằng lệnh /nangcap
   require-block-or-tool: false
-  # Tỷ lệ thành công tối đa (%) cho phép trong một lần quay
-  max-success-chance: 100.0
-  # Hệ số cân bằng (1.0 = đúng 100% tỷ lệ theo giá trị V như ảnh mẫu; 0.95 = trừ 5% phí sàn)
-  chance-multiplier: 1.0
-  # Thông báo toàn server khi người chơi nâng cấp trúng vật phẩm giá trị cao hoặc tỷ lệ thấp
+  # Trần tỉ lệ thành công tối đa (%) cho người chơi thường (Chống ăn chắc 100% cày đồ)
+  # Người có quyền tnupgrader.maxchance.85 được 85%, quyền tnupgrader.bypass.chance được 100%
+  max-success-chance: 75.0
+  # Hệ số quy đổi tỉ lệ (0.80 = Thuế sàn 20%, chống đổi ngang giá 1:1 để cày đồ)
+  chance-multiplier: 0.80
+  # Thông báo toàn server khi người chơi nâng cấp trúng vật phẩm giá trị cao hoặc tỉ lệ thấp
   broadcast-min-value: 4000.0
   broadcast-max-chance: 35.0
   # Tự động tối ưu hóa thao tác 1-chạm cho người chơi PE (Bedrock/Floodgate) và PC
   pe-one-tap-mode: true
+
+# ==============================================================================
+# 🛡️ HỆ THỐNG CHỐNG LỢI DỤNG CÀY ĐỒ & GIỚI HẠN NGƯỜI CHƠI (ANTI-ABUSE)
+# ==============================================================================
+anti-abuse:
+  # Giới hạn tổng số lượng vật phẩm tối đa được đặt vào lưới 3x3 (ĐỒ CƯỢC X/64)
+  # Chặn việc nhét 9 stack (576 món) đồ rẻ tiền để gom điểm V!
+  max-wager-items: 64
+
+  # Giới hạn Số lượng đích tối đa trong 1 lần quay (VD: tối đa x3 món)
+  max-target-quantity: 3
+
+  # Giới hạn hệ số nhân mục tiêu tối đa (VD: tối đa x5 lần giá trị đang cược)
+  max-upgrade-multiplier: 5
+
+  # Tỉ lệ Đơn Giá tối thiểu của món đồ cược so với Đơn Giá vật phẩm đích (0.15 = 15%)
+  # Ví dụ: Muốn đập lên Thỏi Netherite (1,656 V), mỗi món đồ đặt cược phải có đơn giá
+  # tối thiểu >= 248 V (như Kim cương 250 V, Phế liệu Netherite 351 V, Đá Cường Hóa 1000 V).
+  # Chặn tuyệt đối việc gom Sắt/Đồng/Than từ máy farm AFK để đập thẳng lên đồ cuối!
+  min-unit-value-ratio: 0.15
+
+  # Giới hạn số lượt quay Đấu Giá tối đa mỗi ngày của 1 người chơi thường
+  # (Quyền tnupgrader.limit.30 = 30 lượt, tnupgrader.limit.50 = 50 lượt, tnupgrader.bypass.limit = Vô hạn)
+  daily-wager-limit: 15
+
+  # Thời gian chờ (giây) giữa 2 lần bấm quay liên tiếp (Chống spam / auto-clicker)
+  cooldown-seconds: 8
+
+  # Bật kiểm tra quyền mở khóa theo Bậc Giá Trị Phần Thưởng (Tier Permissions):
+  # - Bậc Cao Cấp (>= 1,500 V): Yêu cầu quyền tnupgrader.tier.epic
+  # - Bậc Thần Thoại (>= 10,000 V): Yêu cầu quyền tnupgrader.tier.legendary (Mặc định chỉ OP/VIP)
+  require-tier-permissions: true
+  epic-tier-min-value: 1500.0
+  legendary-tier-min-value: 10000.0
 
 # ==============================================================================
 # 1. CHẾ TẠO KHỐI CHỨC NĂNG & CÔNG CỤ NÂNG CẤP (VÀNG + KIM CƯƠNG + ĐE)
@@ -33,10 +68,9 @@ crafting:
       - "&6▸ Công dụng:"
       - "&f  Đặt xuống đất và &eChuột Phải (Chạm)"
       - "&f  để mở giao diện &6Nâng Cấp Vật Phẩm"
-      - "&f  & Cường Hóa Trang Bị End-Game!"
+      - "&f  & Cường Hóa Trang Bị Cổ Ngữ!"
       - ""
       - "&8[TN-UpgraderItems - Tài Nguyễn]"
-    # Công thức chế tạo 3x3: G = GOLD_INGOT, D = DIAMOND, A = ANVIL, B = GOLD_BLOCK
     shape:
       - "GDG"
       - "DAD"
@@ -70,11 +104,13 @@ crafting:
       A: BOOK
 
 # ==============================================================================
-# 2. CẤU HÌNH CHẾ ĐỘ CƯỜNG HÓA TRANG BỊ END-GAME (THUỘC TÍNH & PHÙ PHÉP)
+# 2. CẤU HÌNH CHẾ ĐỘ CƯỜNG HÓA TRANG BỊ & CỔ NGỮ ĐỘC QUYỀN
 # ==============================================================================
 equipment-upgrader:
   # Giới hạn số lượng thuộc tính bổ sung tối đa trên 1 món trang bị (Cân bằng game)
   max-custom-attributes: 3
+  # Giới hạn số lượng Cổ Ngữ Độc Quyền tối đa trên 1 món trang bị
+  max-native-enchants: 3
   # Cấp độ tối đa của mỗi dòng thuộc tính bổ sung
   max-attribute-level: 10
   # Mỗi lần nâng cấp thất bại trang bị sẽ KHÔNG bị mất mà tích lũy thêm % May Mắn (Pity)
@@ -84,7 +120,7 @@ equipment-upgrader:
   base-upgrade-cost-v: 500.0
   cost-multiplier-per-level: 1.55
 
-  # Cấu hình chi tiết các dòng thuộc tính End-Game
+  # Cấu hình chi tiết các dòng thuộc tính Cường Hóa
   attributes:
     ATTACK_DAMAGE:
       enabled: true
@@ -92,7 +128,7 @@ equipment-upgrader:
       per-level: 1.5
       unit: " Sát thương"
       icon: NETHERITE_SWORD
-      description: "Tăng sát thương cận chiến trực tiếp lên mục tiêu"
+      description: "Tăng trực tiếp sát thương khi đánh quái, Boss và người chơi"
     MAX_HEALTH:
       enabled: true
       name: "&d❤ Sinh Lực Tối Đa"
@@ -148,25 +184,21 @@ equipment-upgrader:
       per-level: 1.0
       unit: " Sát thương chuẩn"
       icon: NETHER_STAR
-      description: "Gây sát thương bỏ qua hoàn toàn giáp của đối phương & MythicMobs"
+      description: "Gây sát thương bỏ qua hoàn toàn giáp của đối phương"
 
-  # Cấu hình nâng cấp Phù Phép (Hỗ trợ cả Vanilla & ExcellentEnchants 1.21+)
   enchant-upgrader:
     enabled: true
-    # Cho phép nâng cấp vượt giới hạn cấp độ mặc định thêm bao nhiêu cấp (VD: Sharpness V -> VIII)
+    # Cho phép nâng cấp vượt giới hạn cấp độ mặc định thêm bao nhiêu cấp (VD: Hiệu Suất V -> VIII)
     over-max-level-bonus: 3
     base-enchant-cost-v: 600.0
 
 # ==============================================================================
-# 3. TÍCH HỢP PLUGIN HỖ TRỢ (MYTHICMOBS & EXCELLENTENCHANTS)
+# 3. TÍCH HỢP MỞ RỘNG TÙY CHỌN (MYTHICMOBS & EXCELLENTENCHANTS)
 # ==============================================================================
 hooks:
   mythicmobs:
     enabled: true
-    # Giá trị mặc định (V) cho các vật phẩm MythicMobs khi đặt làm đồ cược
     default-mythic-item-value: 1500.0
-    # Danh sách vật phẩm MythicMobs xuất hiện trong kho "Tìm Phần Thưởng"
-    # Định dạng: <Tên_Item_MythicMobs>: <Giá_Trị_V>
     items:
       SkeletonKingSword: 12000.0
       CrownOfTheKing: 8500.0
@@ -174,35 +206,24 @@ hooks:
 
   excellentenchants:
     enabled: true
-    # Tự động quét các phù phép custom từ ExcellentEnchants đưa vào kho phần thưởng & cường hóa
     include-books-in-reward-browser: true
     base-custom-book-value: 1800.0
 
 # ==============================================================================
-# 4. BẢNG GIÁ TRỊ VẬT PHẨM (V) - CHUẨN THEO BỘ ẢNH MẪU
+# 4. BẢNG GIÁ TRỊ VẬT PHẨM (V) - ĐÃ LOẠI BỎ ĐỒ RÁC DỄ FARM AFK
 # ==============================================================================
-# Mọi vật phẩm đều có giá trị (V) dùng để đặt cược và quy đổi tỷ lệ thành công:
-# Công thức: Tỷ lệ (%) = (Tổng Giá Trị Đồ Cược V / Tổng Giá Trị Đích V) * 100
+# Chỉ những khoáng sản tinh luyện, trang bị và bảo vật có giá trị thực mới có điểm V
 item-values:
-  # --- KHOÁNG SẢN & NGUYÊN LIỆU ---
+  # --- KHOÁNG SẢN & NGUYÊN LIỆU TINH LUYỆN ---
   IRON_INGOT: 27.0
-  RAW_IRON: 20.0
-  IRON_ORE: 27.0
-  DEEPSLATE_IRON_ORE: 30.0
   IRON_BLOCK: 243.0
   COPPER_INGOT: 12.0
-  COPPER_NUGGET: 1.0
-  RAW_COPPER: 10.0
   GOLD_INGOT: 64.0
-  RAW_GOLD: 50.0
-  GOLD_ORE: 64.0
-  DEEPSLATE_GOLD_ORE: 70.0
   GOLD_BLOCK: 576.0
   EMERALD: 120.0
   EMERALD_BLOCK: 1080.0
   LAPIS_LAZULI: 15.0
   REDSTONE: 12.0
-  COAL: 8.0
   QUARTZ: 18.0
   AMETHYST_SHARD: 25.0
   DIAMOND: 250.0
@@ -228,7 +249,7 @@ item-values:
   TRIAL_KEY: 800.0
   OMINOUS_TRIAL_KEY: 2400.0
 
-  # --- VŨ KHÍ, CÔNG CỤ & GIÁP KIM CƯƠNG (Chuẩn giá ảnh 2, 3, 4) ---
+  # --- VŨ KHÍ, CÔNG CỤ & GIÁP KIM CƯƠNG ---
   DIAMOND_BOOTS: 1000.0
   DIAMOND_SHOVEL: 252.0
   DIAMOND_SWORD: 501.0
@@ -251,42 +272,20 @@ item-values:
   NETHERITE_LEGGINGS: 3700.0
   NETHERITE_CHESTPLATE: 4000.0
 
-  # --- VŨ KHÍ & TRANG BỊ ĐẶC BIỆT (Chuẩn giá ảnh 3, 5) ---
-  TRIDENT: 252.0
+  # --- VŨ KHÍ & TRANG BỊ ĐẶC BIỆT ---
+  TRIDENT: 1200.0
   MACE: 12000.0
   ELYTRA: 16000.0
   TOTEM_OF_UNDYING: 3500.0
-  BOW: 120.0
-  CROSSBOW: 180.0
-  SHIELD: 150.0
+  BOW: 150.0
+  CROSSBOW: 200.0
+  SHIELD: 180.0
   TURTLE_HELMET: 900.0
   BLAST_FURNACE: 160.0
   ANVIL: 850.0
   ENCHANTING_TABLE: 1400.0
 
-  # --- THỨC ĂN & VẬT PHẨM HỒI PHỤC (Chuẩn giá ảnh 9) ---
-  HONEY_BOTTLE: 24.0
-  BEETROOT_SOUP: 25.5
-  RABBIT_STEW: 27.5
-  CHORUS_FRUIT: 48.0
+  # --- VẬT PHẨM HỒI PHỤC CAO CẤP ---
   GOLDEN_CARROT: 60.0
-  CAKE: 70.0
   GOLDEN_APPLE: 512.0
   ENCHANTED_GOLDEN_APPLE: 6000.0
-  COOKED_BEEF: 12.0
-  COOKED_PORKCHOP: 12.0
-
-  # --- KHỐI XÂY DỰNG & TỰ NHIÊN (Chuẩn giá ảnh 7) ---
-  BAMBOO: 1.0
-  ANDESITE_SLAB: 1.0
-  BIRCH_SLAB: 1.0
-  COBBLESTONE_SLAB: 1.0
-  DIORITE_SLAB: 1.0
-  GRANITE_SLAB: 1.0
-  STONE_SLAB: 1.0
-  OAK_LOG: 8.0
-  COBBLESTONE: 2.0
-  STONE: 3.0
-  OBSIDIAN: 80.0
-  CRYING_OBSIDIAN: 150.0
-  SPONGE: 400.0

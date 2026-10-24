@@ -152,7 +152,9 @@ public class RewardBrowserGui {
         // --- DANH SÁCH VẬT PHẨM PHẦN THƯỞNG ---
         int startIndex = page * ITEMS_PER_PAGE;
         double multSetting = plugin.getConfigManager().getChanceMultiplier();
-        double maxChance = plugin.getConfigManager().getMaxSuccessChance();
+        double maxChance = plugin.getConfigManager().getPlayerMaxSuccessChance(player);
+        int maxQty = plugin.getConfigManager().getMaxTargetQuantity();
+        double minRatio = plugin.getConfigManager().getMinUnitValueRatio();
 
         for (int i = 0; i < ITEM_SLOTS.length; i++) {
             int slot = ITEM_SLOTS[i];
@@ -163,25 +165,30 @@ public class RewardBrowserGui {
             }
 
             RewardItem item = filtered.get(idx);
-            int suggestedQty = item.getSuggestedQuantity(wagerV);
+            int suggestedQty = Math.min(maxQty, item.getSuggestedQuantity(wagerV));
             double totalV = item.getTotalValue(suggestedQty);
             double chance = item.calculateChance(wagerV, suggestedQty, multSetting, maxChance);
             boolean isFav = profile.isFavorite(item.getId());
             boolean isSelected = session.getTargetReward() != null
                     && session.getTargetReward().getId().equals(item.getId());
+            boolean tierUnlocked = plugin.getConfigManager().canPlayerSelectRewardTier(player, item);
+            double minReqUnitV = item.getUnitValue() * minRatio;
 
-            String chanceColor = chance >= 75.0 ? "&a" : (chance >= 35.0 ? "&e" : "&6");
+            String chanceColor = chance >= 60.0 ? "&a" : (chance >= 30.0 ? "&e" : "&6");
             ItemStack iconStack = item.createItemStack(Math.min(64, suggestedQty));
 
             ItemStack display = new ItemBuilder(iconStack)
-                    .name("&f" + item.getDisplayName() + " &7x" + suggestedQty + (isFav ? " &e★" : ""))
+                    .name((tierUnlocked ? "&f" : "&c🔒 ") + item.getDisplayName() + " &7x" + suggestedQty + (isFav ? " &e★" : ""))
                     .lore(
                             "&7" + TextUtil.formatValue(totalV) + " V &8• " + chanceColor + TextUtil.formatPercent(chance) + "%",
                             "",
-                            "&8Đơn giá: " + TextUtil.formatValue(item.getUnitValue()) + " V / món",
-                            "&8Phân loại: " + item.getCategory().getDisplayName(),
+                            "&8Đơn giá: &e" + TextUtil.formatValue(item.getUnitValue()) + " V / món",
+                            "&8Yêu cầu đơn giá đồ cược: &6≥ " + TextUtil.formatValue(minReqUnitV) + " V / món",
+                            "&8Phân bậc: " + plugin.getConfigManager().getRequiredTierPermissionLabel(item),
                             "",
-                            "&a▸ Chạm / Chuột trái: &fChọn làm mục tiêu nâng cấp",
+                            tierUnlocked
+                                    ? "&a▸ Chạm / Chuột trái: &fChọn làm mục tiêu nâng cấp"
+                                    : "&c✘ Bạn chưa có quyền mở khóa bậc phần thưởng này!",
                             "&e▸ Chuột phải: &f" + (isFav ? "Bỏ khỏi Yêu thích" : "Thêm vào Yêu thích ★")
                     )
                     .glow(isSelected || isFav)

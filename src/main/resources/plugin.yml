@@ -3,8 +3,8 @@ version: '${project.version}'
 main: vn.tainguyen.tnupgrader.TNUpgraderPlugin
 api-version: '1.21'
 authors: [ Tài Nguyễn ]
-description: Hệ thống Nâng Cấp Vật Phẩm (Đấu Giá May Rủi) & Cường Hóa Trang Bị End-Game độc quyền cho Paper 1.21+
-website: https://github.com/tainguyen
+description: Hệ thống Nâng Cấp Vật Phẩm & Cường Hóa Trang Bị Cổ Ngữ Độc Quyền (Có cơ chế Chống Cày Đồ & Phân Quyền Chi Tiết) cho Paper 1.21+
+website: https://github.com/Jaojao00/TN-UpgraderItems
 softdepend:
   - MythicMobs
   - ExcellentEnchants
@@ -15,18 +15,80 @@ commands:
   upgrader:
     description: Mở giao diện Nâng Cấp Vật Phẩm hoặc quản lý TN-UpgraderItems
     aliases: [ tnupgrader, nangcap, nc, upgradeitems ]
-    usage: /<command> [open|equip|tool|block|stats|setvalue|reload]
+    usage: /<command> [open|equip|tool|block|stone|crystal|stats|setvalue|reload]
 
 permissions:
   tnupgrader.use:
-    description: Cho phép người chơi sử dụng hệ thống Nâng Cấp Vật Phẩm & Cường Hóa Trang Bị
+    description: Quyền cơ bản để mở giao diện TN-UpgraderItems
     default: true
   tnupgrader.command.open:
-    description: Cho phép mở menu nâng cấp từ xa bằng lệnh /nangcap
+    description: Cho phép mở menu nâng cấp bằng lệnh /nangcap
     default: true
+
+  # --- QUYỀN TỪNG CHẾ ĐỘ & TỪNG TAB ---
+  tnupgrader.mode.wager:
+    description: Cho phép sử dụng bàn Đấu Giá Đổi Vật Phẩm 3x3 (ĐỒ CƯỢC)
+    default: true
+  tnupgrader.mode.equipment:
+    description: Cho phép sử dụng Bàn Cường Hóa Trang Bị & Cổ Ngữ
+    default: true
+  tnupgrader.tab.attributes:
+    description: Cho phép nâng cấp Tab 1 - Thuộc Tính Cường Hóa
+    default: true
+  tnupgrader.tab.enchants:
+    description: Cho phép nâng cấp Tab 2 - Phù Phép (Hiệu Suất, Chậm Hỏng...)
+    default: true
+  tnupgrader.tab.runes:
+    description: Cho phép nâng cấp Tab 3 - Cổ Ngữ Độc Quyền TN-Upgrader
+    default: true
+
+  # --- QUYỀN MỞ KHÓA BẬC PHẦN THƯỞNG (CHỐNG CÀY ĐỒ OP SỚM) ---
+  tnupgrader.tier.epic:
+    description: Cho phép chọn phần thưởng Bậc Cao Cấp (Giá trị >= 1,500 V như đồ Netherite, Sách Phù Phép)
+    default: true
+  tnupgrader.tier.legendary:
+    description: Cho phép chọn phần thưởng Bậc Thần Thoại (Giá trị >= 10,000 V như Elytra, Chùy, Bảo Vật Thần Thoại)
+    default: op
+
+  # --- QUYỀN ƯU ĐÃI VIP (TĂNG LƯỢT ĐẬP MỖI NGÀY & TĂNG TRẦN TỈ LỆ) ---
+  tnupgrader.limit.30:
+    description: Tăng giới hạn số lượt Đấu Giá mỗi ngày lên 30 lượt
+    default: false
+  tnupgrader.limit.50:
+    description: Tăng giới hạn số lượt Đấu Giá mỗi ngày lên 50 lượt
+    default: false
+  tnupgrader.maxchance.85:
+    description: Tăng trần tỉ lệ thành công tối đa lên 85% (Mặc định người chơi thường là 75%)
+    default: false
+
+  # --- QUYỀN BỎ QUA GIỚI HẠN & QUẢN TRỊ VIÊN ---
+  tnupgrader.bypass.limit:
+    description: Không giới hạn số lượt nâng cấp mỗi ngày
+    default: op
+  tnupgrader.bypass.cooldown:
+    description: Không bị thời gian chờ (Cooldown) giữa các lần quay
+    default: op
+  tnupgrader.bypass.chance:
+    description: Cho phép đạt tỉ lệ thành công tối đa 100%
+    default: op
+  tnupgrader.bypass.ratio:
+    description: Bỏ qua giới hạn chênh lệch bậc nguyên liệu cược
+    default: op
+
   tnupgrader.admin:
-    description: Quyền quản trị viên TN-UpgraderItems (reload, give tool/block, setvalue)
+    description: Toàn quyền quản trị viên TN-UpgraderItems
     default: op
     children:
       tnupgrader.use: true
       tnupgrader.command.open: true
+      tnupgrader.mode.wager: true
+      tnupgrader.mode.equipment: true
+      tnupgrader.tab.attributes: true
+      tnupgrader.tab.enchants: true
+      tnupgrader.tab.runes: true
+      tnupgrader.tier.epic: true
+      tnupgrader.tier.legendary: true
+      tnupgrader.bypass.limit: true
+      tnupgrader.bypass.cooldown: true
+      tnupgrader.bypass.chance: true
+      tnupgrader.bypass.ratio: true

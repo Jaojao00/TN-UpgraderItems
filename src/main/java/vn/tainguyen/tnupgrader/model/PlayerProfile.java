@@ -1,5 +1,6 @@
 package vn.tainguyen.tnupgrader.model;
 
+import java.time.LocalDate;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -21,6 +22,11 @@ public class PlayerProfile {
     private double totalWageredValue = 0.0;
     private double totalWonValue = 0.0;
     private double pityBonus = 0.0;
+
+    // --- Giới hạn lượt Đấu Giá mỗi ngày & Cooldown chống spam ---
+    private int dailyAttemptsUsed = 0;
+    private long lastResetEpochDay = LocalDate.now().toEpochDay();
+    private long lastSpinTimeMs = 0L;
 
     private final Set<String> favoriteItemIds = new LinkedHashSet<>();
 
@@ -135,6 +141,44 @@ public class PlayerProfile {
 
     public void setPityBonus(double pityBonus) {
         this.pityBonus = Math.max(0.0, pityBonus);
+    }
+
+    public int getDailyAttemptsUsed() {
+        checkDailyReset();
+        return dailyAttemptsUsed;
+    }
+
+    public void setDailyAttemptsUsed(int dailyAttemptsUsed) {
+        this.dailyAttemptsUsed = Math.max(0, dailyAttemptsUsed);
+    }
+
+    public void incrementDailyAttempts() {
+        checkDailyReset();
+        this.dailyAttemptsUsed++;
+    }
+
+    public long getLastResetEpochDay() {
+        return lastResetEpochDay;
+    }
+
+    public void setLastResetEpochDay(long lastResetEpochDay) {
+        this.lastResetEpochDay = lastResetEpochDay;
+    }
+
+    private void checkDailyReset() {
+        long today = LocalDate.now().toEpochDay();
+        if (this.lastResetEpochDay != today) {
+            this.lastResetEpochDay = today;
+            this.dailyAttemptsUsed = 0;
+        }
+    }
+
+    public long getLastSpinTimeMs() {
+        return lastSpinTimeMs;
+    }
+
+    public void setLastSpinTimeMs(long lastSpinTimeMs) {
+        this.lastSpinTimeMs = lastSpinTimeMs;
     }
 
     public Set<String> getFavoriteItemIds() {

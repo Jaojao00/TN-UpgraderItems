@@ -83,19 +83,33 @@ public class MainUpgraderGui {
         }
 
         // --- HÀNG 1 (HEADER & TIỆN ÍCH NHANH) ---
-        // Slot 0: ĐỒ CƯỢC X/64
+        int maxWagerItems = plugin.getConfigManager().getMaxWagerItems();
+        int dailyUsed = profile.getDailyAttemptsUsed();
+        int dailyLimit = plugin.getConfigManager().getPlayerDailyLimit(player);
+        double playerMaxChance = plugin.getConfigManager().getPlayerMaxSuccessChance(player);
+        double chanceMult = plugin.getConfigManager().getChanceMultiplier();
+        double minRatio = plugin.getConfigManager().getMinUnitValueRatio();
+        int maxMult = plugin.getConfigManager().getMaxUpgradeMultiplier();
+        int maxQty = plugin.getConfigManager().getMaxTargetQuantity();
+        double lowestUnitV = session.getLowestWagerUnitValue();
+
+        // Slot 0: ĐỒ CƯỢC X/64 (Hiển thị đầy đủ Hạn chế Chống Cày Đồ & Quyền Hạn)
         inv.setItem(0, new ItemBuilder(Material.CHEST)
-                .name("&e&lĐỒ CƯỢC &f" + wagerCount + "/64")
+                .name("&e&lĐỒ CƯỢC &f" + wagerCount + "/" + maxWagerItems)
                 .lore(
                         "&7Tổng giá trị đang cược: &6" + TextUtil.formatValue(wagerV) + " V",
+                        "&7Đơn giá món thấp nhất: &e" + TextUtil.formatValue(lowestUnitV) + " V / món",
+                        "",
+                        "&c&l🛡 CƠ CHẾ CHỐNG CÀY ĐỒ & GIỚI HẠN:",
+                        "&f• &7Số lượng cược tối đa: &e" + wagerCount + "/" + maxWagerItems + " vật phẩm",
+                        "&f• &7Lượt Đấu Giá hôm nay: &e" + dailyUsed + "/" + (dailyLimit >= 999999 ? "∞" : dailyLimit) + " lượt",
+                        "&f• &7Trần tỉ lệ tối đa của bạn: &a" + TextUtil.formatPercent(playerMaxChance) + "% &8(Hệ số x" + TextUtil.formatPercent(chanceMult) + ")",
+                        "&f• &7Yêu cầu bậc nguyên liệu: &fĐơn giá món cược &e≥ " + Math.round(minRatio * 100) + "% &fđơn giá đích",
+                        "&f• &7Hệ số nâng cấp tối đa: &ex" + maxMult + " &8| &7Số lượng đích tối đa: &ex" + maxQty,
                         "",
                         "&e▸ Cách đặt đồ cược (PC & PE):",
-                        "&f  Chạm/Click trực tiếp vào vật phẩm",
-                        "&f  trong &6Túi Đồ &fbên dưới để đưa lên",
-                        "&f  lưới 3x3 mà không cần kéo thả!",
-                        "",
-                        "&7Chạm vào món đồ trong lưới 3x3",
-                        "&7để rút món đó về lại túi đồ."
+                        "&f  Chạm/Click trực tiếp vào vật phẩm trong &6Túi Đồ",
+                        "&f  bên dưới để đưa lên lưới 3x3 (Hoặc chạm ô 3x3 để rút về)."
                 )
                 .build());
 
@@ -260,15 +274,17 @@ public class MainUpgraderGui {
                     .glow(true)
                     .build());
         } else {
-            boolean ready = target != null && wagerV > 0.0;
+            String blockReason = getSpinBlockReason(player, session, profile);
+            boolean ready = (blockReason == null);
             inv.setItem(UPGRADE_BUTTON_SLOT, new ItemBuilder(ready ? Material.GOLD_BLOCK : Material.GOLDEN_SWORD)
-                    .name(ready ? "&6&l⚡ NÂNG CẤP ⚡" : "&e&lNÂNG CẤP &7(Chưa đủ điều kiện)")
+                    .name(ready ? "&6&l⚡ NÂNG CẤP ⚡" : "&c&lNÂNG CẤP &7(Chưa thỏa điều kiện)")
                     .lore(
-                            "&7Đồ cược: &6" + TextUtil.formatValue(wagerV) + " V",
-                            "&7Mục tiêu: &f" + (target != null ? target.getDisplayName() + " x" + qty : "Chưa chọn"),
-                            "&7Tỉ lệ thành công: &a&l" + TextUtil.formatPercent(chance) + "%",
+                            "&7Đồ cược: &6" + TextUtil.formatValue(wagerV) + " V &8(" + wagerCount + "/" + maxWagerItems + " món)",
+                            "&7Mục tiêu: &f" + (target != null ? target.getDisplayName() + " x" + qty + " (" + TextUtil.formatValue(target.getTotalValue(qty)) + " V)" : "Chưa chọn"),
+                            "&7Tỉ lệ thành công: &a&l" + TextUtil.formatPercent(chance) + "% &8(Tối đa " + TextUtil.formatPercent(playerMaxChance) + "%)",
+                            "&7Lượt hôm nay: &e" + dailyUsed + "/" + (dailyLimit >= 999999 ? "∞" : dailyLimit) + " lượt",
                             "",
-                            ready ? "&6&l▸ CHẠM ĐỂ QUAY NÂNG CẤP NGAY!" : "&c▸ Hãy đặt đồ cược và chọn vật phẩm đích!"
+                            ready ? "&6&l▸ CHẠM ĐỂ QUAY NÂNG CẤP NGAY!" : "&c✘ " + blockReason
                     )
                     .glow(ready)
                     .hideFlags()
@@ -277,37 +293,52 @@ public class MainUpgraderGui {
 
         // Slot 26: Số lượng đích: X
         inv.setItem(TARGET_QTY_SLOT, new ItemBuilder(Material.PAPER, Math.min(64, qty))
-                .name("&fSố lượng đích: &e" + qty)
+                .name("&fSố lượng đích: &e" + qty + "&7/" + maxQty)
                 .lore(
-                        "&7Nhân số lượng vật phẩm mục tiêu nhận được.",
+                        "&7Nhân số lượng vật phẩm mục tiêu nhận được",
+                        "&7(Giới hạn tối đa &ex" + maxQty + " &7mỗi lượt để chống cày đồ).",
                         "",
                         "&a▸ Chuột trái / Chạm: &f+1 số lượng",
                         "&c▸ Chuột phải: &f-1 số lượng",
-                        "&e▸ Shift + Click: &f+5 (Hoặc đặt lại về 1)"
+                        "&e▸ Shift + Click: &fĐặt lại về 1"
                 )
                 .build());
 
         // --- HÀNG 5 (SLOTS 36..44): HỆ SỐ NHÂN NHANH x1 ▸ x10 ---
+        boolean bypassRatio = player.hasPermission("tnupgrader.bypass.ratio") || player.hasPermission("tnupgrader.admin");
         for (int i = 0; i < MULTIPLIER_VALUES.length; i++) {
             int mult = MULTIPLIER_VALUES[i];
             int slot = 36 + i;
-            boolean selected = session.getSelectedMultiplier() == mult;
+            boolean lockedMult = !bypassRatio && mult > maxMult;
+            boolean selected = session.getSelectedMultiplier() == mult && !lockedMult;
             double targetValForMult = wagerV > 0 ? (wagerV * mult) : (1000.0 * mult);
-            double approxChance = Math.min(100.0, 100.0 / mult);
+            double approxChance = Math.min(playerMaxChance, (100.0 / mult) * chanceMult);
 
-            inv.setItem(slot, new ItemBuilder(selected ? Material.YELLOW_STAINED_GLASS_PANE : Material.GRAY_STAINED_GLASS_PANE, mult)
-                    .name((selected ? "&e&l" : "&f") + "x" + mult)
-                    .lore(
-                            "&7Tự động chọn phần thưởng có giá trị",
-                            "&7gấp &ex" + mult + " lần &7tổng đồ cược!",
-                            "",
-                            "&7Giá trị đích ước tính: &6~" + TextUtil.formatValue(targetValForMult) + " V",
-                            "&7Tỉ lệ trúng tương ứng: &a~" + TextUtil.formatPercent(approxChance) + "%",
-                            "",
-                            "&e▸ Chạm để chọn nhanh hệ số x" + mult
-                    )
-                    .glow(selected)
-                    .build());
+            if (lockedMult) {
+                inv.setItem(slot, new ItemBuilder(Material.RED_STAINED_GLASS_PANE, mult)
+                        .name("&c&l🔒 x" + mult + " &8(Khóa)")
+                        .lore(
+                                "&7Hệ số nhân vượt quá giới hạn &ex" + maxMult,
+                                "&7đã bị khóa để chống lợi dụng cày đồ!",
+                                "",
+                                "&8Yêu cầu quyền: tnupgrader.bypass.ratio"
+                        )
+                        .build());
+            } else {
+                inv.setItem(slot, new ItemBuilder(selected ? Material.YELLOW_STAINED_GLASS_PANE : Material.GRAY_STAINED_GLASS_PANE, mult)
+                        .name((selected ? "&e&l" : "&f") + "x" + mult)
+                        .lore(
+                                "&7Tự động chọn phần thưởng hợp lệ có giá trị",
+                                "&7gấp &ex" + mult + " lần &7tổng đồ cược!",
+                                "",
+                                "&7Giá trị đích ước tính: &6~" + TextUtil.formatValue(targetValForMult) + " V",
+                                "&7Tỉ lệ trúng tương ứng: &a~" + TextUtil.formatPercent(approxChance) + "%",
+                                "",
+                                "&e▸ Chạm để chọn nhanh hệ số x" + mult
+                        )
+                        .glow(selected)
+                        .build());
+            }
         }
 
         // --- HÀNG 6 (SLOTS 45..53): THANH ĐIỀU HƯỚNG CHÍNH ---
@@ -504,28 +535,86 @@ public class MainUpgraderGui {
     }
 
     /**
+     * Kiểm tra toàn bộ điều kiện chống lợi dụng cày đồ & quyền hạn trước khi cho phép quay
+     */
+    public String getSpinBlockReason(Player player, UpgraderSession session, PlayerProfile profile) {
+        if (!player.hasPermission("tnupgrader.mode.wager") && !player.hasPermission("tnupgrader.admin")) {
+            return "Bạn không có quyền sử dụng bàn Đấu Giá (tnupgrader.mode.wager)!";
+        }
+        RewardItem target = session.getTargetReward();
+        double wagerV = session.getTotalWagerValue();
+        if (target == null || wagerV <= 0.0) {
+            return "Hãy đặt đồ cược (3x3) và chọn vật phẩm đích!";
+        }
+        int dailyLimit = plugin.getConfigManager().getPlayerDailyLimit(player);
+        if (profile.getDailyAttemptsUsed() >= dailyLimit) {
+            return "Bạn đã hết lượt Đấu Giá hôm nay (" + dailyLimit + "/" + dailyLimit + " lượt)!";
+        }
+        if (!plugin.getConfigManager().canPlayerSelectRewardTier(player, target)) {
+            return "Cần quyền " + plugin.getConfigManager().getRequiredTierPermissionLabel(target) + "&c!";
+        }
+        boolean bypassRatio = player.hasPermission("tnupgrader.bypass.ratio") || player.hasPermission("tnupgrader.admin");
+        if (!bypassRatio) {
+            double minRatio = plugin.getConfigManager().getMinUnitValueRatio();
+            double reqMinUnitV = target.getUnitValue() * minRatio;
+            double lowestUnitV = session.getLowestWagerUnitValue();
+            if (lowestUnitV < reqMinUnitV) {
+                return "Đơn giá mỗi món cược phải ≥ " + TextUtil.formatValue(reqMinUnitV)
+                        + " V (" + Math.round(minRatio * 100) + "% giá đích) để chống lấy đồ rác cày đồ xịn!";
+            }
+            int maxMult = plugin.getConfigManager().getMaxUpgradeMultiplier();
+            double totalTargetV = target.getTotalValue(session.getTargetQuantity());
+            double minRequiredTotalWager = totalTargetV / Math.max(1, maxMult);
+            if (wagerV + 0.001 < minRequiredTotalWager) {
+                return "Tổng cược tối thiểu phải đạt " + TextUtil.formatValue(minRequiredTotalWager)
+                        + " V (Tối đa nhân x" + maxMult + " giá trị cược)!";
+            }
+        }
+        return null;
+    }
+
+    /**
      * Bắt đầu quay nâng cấp vật phẩm với hiệu ứng hồi hộp như trong ảnh 5 & 6
      */
     public void startUpgradeSpin(Player player, UpgraderSession session) {
         if (session.getSpinState() == UpgraderSession.SpinState.SPINNING) {
             return;
         }
-        RewardItem target = session.getTargetReward();
-        double wagerV = session.getTotalWagerValue();
-        if (target == null || wagerV <= 0.0) {
-            player.sendMessage(TextUtil.color(plugin.getConfigManager().getPrefix()
-                    + "&cVui lòng đặt đồ cược và chọn vật phẩm mục tiêu trước khi nâng cấp!"));
+        PlayerProfile profile = plugin.getProfileManager().getProfile(player);
+        String blockReason = getSpinBlockReason(player, session, profile);
+        if (blockReason != null) {
+            player.sendMessage(TextUtil.color(plugin.getConfigManager().getPrefix() + "&c" + blockReason));
             session.playSound(player, Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
             return;
         }
 
+        // Kiểm tra Cooldown chống spam
+        if (!player.hasPermission("tnupgrader.bypass.cooldown") && !player.hasPermission("tnupgrader.admin")) {
+            int cdSec = plugin.getConfigManager().getCooldownSeconds();
+            if (cdSec > 0) {
+                long elapsedMs = System.currentTimeMillis() - profile.getLastSpinTimeMs();
+                long remainMs = (cdSec * 1000L) - elapsedMs;
+                if (remainMs > 0) {
+                    double remainSec = Math.ceil(remainMs / 100.0) / 10.0;
+                    player.sendMessage(TextUtil.color(plugin.getConfigManager().getPrefix()
+                            + "&eVui lòng chờ &c" + remainSec + " giây &enữa trước khi quay lượt tiếp theo!"));
+                    session.playSound(player, Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+                    return;
+                }
+            }
+        }
+
+        RewardItem target = session.getTargetReward();
+        double wagerV = session.getTotalWagerValue();
         int qty = session.getTargetQuantity();
         double chance = session.getCurrentSuccessChance();
         double rolled = ThreadLocalRandom.current().nextDouble(0.0, 100.0);
         boolean win = rolled <= chance && chance > 0.0;
 
-        // Trừ đồ cược ngay khi bắt đầu quay để chống dupe
+        // Trừ đồ cược & ghi nhận lượt dùng trong ngày + thời gian cooldown ngay khi bắt đầu quay
         session.clearWagerWithoutReturn();
+        profile.incrementDailyAttempts();
+        profile.setLastSpinTimeMs(System.currentTimeMillis());
         session.setLockedSuccessChance(chance);
         session.setLastRolledNumber(rolled);
 
@@ -544,7 +633,6 @@ public class MainUpgraderGui {
             landingSlotIndex = Math.min(WHEEL_RING_SLOTS.length - 1, startLossIdx + (int) Math.floor(lossProgress * lossSpan));
         }
 
-        PlayerProfile profile = plugin.getProfileManager().getProfile(player);
         if (!profile.isSpinAnimation()) {
             session.setCurrentWheelIndex(landingSlotIndex);
             finishUpgradeSpin(player, session, target, qty, wagerV, chance, rolled, win);
@@ -647,10 +735,22 @@ public class MainUpgraderGui {
      * Chọn nhanh phần thưởng theo hệ số nhân x1 ▸ x10 giống thanh hệ số trong ảnh
      */
     public void selectByMultiplier(Player player, UpgraderSession session, int multiplier) {
+        boolean bypassRatio = player.hasPermission("tnupgrader.bypass.ratio") || player.hasPermission("tnupgrader.admin");
+        int maxMult = plugin.getConfigManager().getMaxUpgradeMultiplier();
+        if (!bypassRatio && multiplier > maxMult) {
+            player.sendMessage(TextUtil.color(plugin.getConfigManager().getPrefix()
+                    + "&cHệ số x" + multiplier + " đã bị khóa (Tối đa x" + maxMult + " để chống lợi dụng cày đồ)!"));
+            session.playSound(player, Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+            return;
+        }
+
         session.setSelectedMultiplier(multiplier);
         double wagerV = session.getTotalWagerValue();
         double baseWager = wagerV > 0 ? wagerV : 250.0;
         double desiredTargetV = baseWager * multiplier;
+        double lowestUnitV = session.getLowestWagerUnitValue();
+        double minRatio = plugin.getConfigManager().getMinUnitValueRatio();
+        int maxQty = plugin.getConfigManager().getMaxTargetQuantity();
 
         List<RewardItem> all = new ArrayList<>(plugin.getConfigManager().getRewardList());
         if (all.isEmpty()) return;
@@ -660,9 +760,15 @@ public class MainUpgraderGui {
         double bestDiff = Double.MAX_VALUE;
 
         for (RewardItem item : all) {
+            if (!plugin.getConfigManager().canPlayerSelectRewardTier(player, item)) {
+                continue;
+            }
+            if (!bypassRatio && lowestUnitV > 0 && lowestUnitV < item.getUnitValue() * minRatio) {
+                continue;
+            }
             int qty = 1;
             if (item.getUnitValue() < desiredTargetV) {
-                qty = Math.max(1, Math.min(64, (int) Math.round(desiredTargetV / item.getUnitValue())));
+                qty = Math.max(1, Math.min(maxQty, (int) Math.round(desiredTargetV / item.getUnitValue())));
             }
             double totalV = item.getTotalValue(qty);
             double diff = Math.abs(totalV - desiredTargetV);
@@ -683,6 +789,10 @@ public class MainUpgraderGui {
             if (session.getActiveInventory() != null) {
                 render(player, session, session.getActiveInventory());
             }
+        } else {
+            player.sendMessage(TextUtil.color(plugin.getConfigManager().getPrefix()
+                    + "&eKhông tìm thấy vật phẩm phù hợp với bậc nguyên liệu đang cược! Hãy đặt nguyên liệu có giá trị cao hơn."));
+            session.playSound(player, Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
         }
     }
 

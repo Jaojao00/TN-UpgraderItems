@@ -127,8 +127,10 @@ public class GuiListener implements Listener {
                 session.playSound(player, Sound.ENTITY_ITEM_PICKUP, 0.8f, 1.3f);
                 plugin.getMainUpgraderGui().render(player, session, session.getActiveInventory());
             } else {
+                int maxItems = plugin.getConfigManager().getMaxWagerItems();
                 player.sendMessage(TextUtil.color(plugin.getConfigManager().getPrefix()
-                        + "&eLưới 3x3 Đồ Cược đã đầy (9/9 ô)!"));
+                        + "&eĐã đạt giới hạn tối đa &c" + maxItems + "/" + maxItems + " vật phẩm đặt cược &e(hoặc đầy 9 ô) để chống lợi dụng cày đồ!"));
+                session.playSound(player, Sound.ENTITY_VILLAGER_NO, 0.8f, 1.0f);
             }
         } else if (session.getCurrentMenu() == UpgraderSession.MenuType.EQUIPMENT_UPGRADER) {
             // Nếu ô Trang bị đang trống và vật phẩm là Vũ khí/Giáp/Công cụ -> Đặt vào ô Trang Bị
@@ -207,6 +209,12 @@ public class GuiListener implements Listener {
             }
             case 7, 52, 53 -> {
                 // Chuyển sang Bàn Cường Hóa Trang Bị End-Game
+                if (!player.hasPermission("tnupgrader.mode.equipment") && !player.hasPermission("tnupgrader.admin")) {
+                    player.sendMessage(TextUtil.color(plugin.getConfigManager().getPrefix()
+                            + "&cBạn không có quyền sử dụng Bàn Cường Hóa Trang Bị (tnupgrader.mode.equipment)!"));
+                    session.playSound(player, Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+                    return;
+                }
                 session.playSound(player, Sound.BLOCK_ANVIL_PLACE, 0.7f, 1.2f);
                 plugin.getEquipmentUpgraderGui().open(player, session);
             }
@@ -368,6 +376,13 @@ public class GuiListener implements Listener {
                         session.playSound(player, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.8f, 1.3f);
                         plugin.getRewardBrowserGui().render(player, session, session.getActiveInventory());
                     } else {
+                        if (!plugin.getConfigManager().canPlayerSelectRewardTier(player, reward)) {
+                            player.sendMessage(TextUtil.color(plugin.getConfigManager().getPrefix()
+                                    + "&cBạn chưa có quyền mở khóa vật phẩm "
+                                    + plugin.getConfigManager().getRequiredTierPermissionLabel(reward) + "&c!"));
+                            session.playSound(player, Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+                            return;
+                        }
                         session.setTargetReward(reward);
                         session.setTargetQuantity(suggestedQty != null ? suggestedQty : 1);
                         session.setSpinState(UpgraderSession.SpinState.IDLE);
@@ -458,18 +473,36 @@ public class GuiListener implements Listener {
             }
             case 8 -> player.closeInventory();
             case EquipmentUpgraderGui.ATTR_TAB_SLOT -> {
+                if (!player.hasPermission("tnupgrader.tab.attributes") && !player.hasPermission("tnupgrader.admin")) {
+                    player.sendMessage(TextUtil.color(plugin.getConfigManager().getPrefix()
+                            + "&cBạn không có quyền sử dụng Tab Thuộc Tính Cường Hóa (tnupgrader.tab.attributes)!"));
+                    session.playSound(player, Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+                    return;
+                }
                 session.setUpgradeTab(UpgraderSession.UpgradeTab.ATTRIBUTES);
                 session.setEnchantPage(0);
                 session.playSound(player, Sound.UI_BUTTON_CLICK, 0.8f, 1.3f);
                 plugin.getEquipmentUpgraderGui().render(player, session, session.getActiveInventory());
             }
             case EquipmentUpgraderGui.ENCHANT_TAB_SLOT -> {
+                if (!player.hasPermission("tnupgrader.tab.enchants") && !player.hasPermission("tnupgrader.admin")) {
+                    player.sendMessage(TextUtil.color(plugin.getConfigManager().getPrefix()
+                            + "&cBạn không có quyền sử dụng Tab Phù Phép (tnupgrader.tab.enchants)!"));
+                    session.playSound(player, Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+                    return;
+                }
                 session.setUpgradeTab(UpgraderSession.UpgradeTab.VANILLA_ENCHANTS);
                 session.setEnchantPage(0);
                 session.playSound(player, Sound.UI_BUTTON_CLICK, 0.8f, 1.3f);
                 plugin.getEquipmentUpgraderGui().render(player, session, session.getActiveInventory());
             }
             case EquipmentUpgraderGui.RUNE_TAB_SLOT -> {
+                if (!player.hasPermission("tnupgrader.tab.runes") && !player.hasPermission("tnupgrader.admin")) {
+                    player.sendMessage(TextUtil.color(plugin.getConfigManager().getPrefix()
+                            + "&cBạn không có quyền sử dụng Tab Cổ Ngữ Độc Quyền (tnupgrader.tab.runes)!"));
+                    session.playSound(player, Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+                    return;
+                }
                 session.setUpgradeTab(UpgraderSession.UpgradeTab.NATIVE_RUNES);
                 session.setEnchantPage(0);
                 session.playSound(player, Sound.UI_BUTTON_CLICK, 0.8f, 1.3f);
@@ -581,6 +614,13 @@ public class GuiListener implements Listener {
                 } else {
                     RewardItem item = plugin.getConfigManager().getRewardById(rewardId);
                     if (item != null) {
+                        if (!plugin.getConfigManager().canPlayerSelectRewardTier(player, item)) {
+                            player.sendMessage(TextUtil.color(plugin.getConfigManager().getPrefix()
+                                    + "&cBạn chưa có quyền mở khóa vật phẩm "
+                                    + plugin.getConfigManager().getRequiredTierPermissionLabel(item) + "&c!"));
+                            session.playSound(player, Sound.ENTITY_VILLAGER_NO, 1.0f, 1.0f);
+                            return;
+                        }
                         session.setTargetReward(item);
                         session.setTargetQuantity(qty != null ? qty : 1);
                         session.setSpinState(UpgraderSession.SpinState.IDLE);
