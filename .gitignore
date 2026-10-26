@@ -1,5 +1,6 @@
-﻿target/
+﻿src/
+target/
+pom.xml
 *.iml
 .idea/
-.vscode/
-.DS_Store
+*.log
