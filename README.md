@@ -1,7 +1,13 @@
-# ⚒ TN-UpgraderItems (Paper 1.21+)
-**Tác giả (Author):** Tài Nguyễn  
-**Phiên bản hỗ trợ:** Paper / Purpur `1.21` ▸ `1.21.11+` (Java 21)  
-**Đặc điểm cốt lõi:** **Hoạt động độc lập 100%** với Hệ Sinh Thái Cổ Ngữ, Thuộc Tính, Đá Cường Hóa & Bảo Vật Thần Thoại của riêng `TN-UpgraderItems` *(và tự động mở rộng nếu máy chủ có cài thêm `MythicMobs`, `ExcellentEnchants`, `Floodgate/Geyser`)*.
+<div align="center">
+  <img src="logo.png" alt="TN-UpgraderItems Logo" width="300" style="border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.6);">
+  <h1>⚔️ TN-UpgraderItems ⚒️</h1>
+  <p><b>Đột Phá Nâng Cấp Trang Bị End-Game & Đấu Giá May Rủi Độc Nhất Vô Nhị Cho Minecraft Server</b></p>
+  <p>
+    <b>Tác giả (Author):</b> Tài Nguyễn &nbsp;•&nbsp; 
+    <b>Hỗ trợ:</b> Paper / Purpur 1.21 ▸ 1.21.11+ (Java 21) &nbsp;•&nbsp; 
+    <b>Hỗ trợ PE:</b> Bedrock (Geyser/Floodgate) 1-Chạm
+  </p>
+</div>
 
 ---
 
